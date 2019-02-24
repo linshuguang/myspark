@@ -11,6 +11,7 @@ import java.util.function.Function;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
 import org.apache.spark.sql.catalyst.trees.TreeNode.CurrentOrigin;
@@ -34,6 +35,11 @@ public class ParserUtils {
         return ret;
     }
 
+    public static void require(boolean requirement, Object message){
+        if(!requirement){
+            throw new RuntimeException(message.toString());
+        }
+    }
     public static String string(Token token){
         return unescapeSQLString(token.getText());
     }
@@ -150,7 +156,11 @@ public class ParserUtils {
             throw new ParseException(message, ctx);
         }
     }
-
+    public static void validate(boolean f, String message, ParserRuleContext ctx){
+        if (!f) {
+            throw new ParseException(message, ctx);
+        }
+    }
 
     @FunctionalInterface
     interface MyMapFunctionalInterface <T>{
@@ -169,6 +179,35 @@ public class ParserUtils {
         }
     }
 
+    public static LogicalPlan optional(LogicalPlan plan, Object ctx,MyMapFunctionalInterface<Object>f){
+        if (ctx != null) {
+            return f.apply(ctx, plan);
+        } else {
+            return plan;
+        }
+    }
+
+    public static <C, T> List<T> reverseMap(
+            List<C> ctxs,
+            Function<C,T>f){
+
+        List<T> tList = map(ctxs,f);
+        Collections.reverse(tList);
+        return tList;
+    }
+
+    public static <C, T > List<T> map(
+            List<C> ctxs,
+            Function<C,T>f
+
+    ){
+        List<T> tList = new ArrayList<>();
+      for(C ctx: ctxs){
+          tList.add(f.apply(ctx));
+      }
+      return tList;
+    }
+
     @FunctionalInterface
     interface FoldLeftFunctionalInterface <T, C>{
 
@@ -178,6 +217,17 @@ public class ParserUtils {
     public static <T, C> T foldLeft(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
         T initial = t;
         for( C col : collection){
+            t = f.apply(t, col);
+        }
+        return t;
+    }
+
+    public static <T, C> T foldRight(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
+        T initial = t;
+
+        C[] array = (C[])collection.toArray();
+        for(int i = collection.size()-1; i>=0;i--){
+            C col = array[i];
             t = f.apply(t, col);
         }
         return t;
@@ -208,7 +258,16 @@ public class ParserUtils {
 //        }
 //    }
 
+    public static <K,V> Map<K,V> toMap(List<Pair<K,V>> pairs){
+        Map<K,V> map = new HashMap<>();
+        for(Pair<K,V> pair:pairs){
+            map.put(pair.getKey(),pair.getValue());
+        }
+        return map;
+    }
 
-
+    public static <T> List<T> Seq(T ...t){
+        return Arrays.asList(t);
+    }
 
 }

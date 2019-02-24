@@ -1,8 +1,11 @@
 package org.apache.spark.sql.catalyst.identifiers;
 
+import lombok.Data;
+
 /**
  * Created by kenya on 2019/1/19.
  */
+@Data
 public class FunctionIdentifier extends IdentifierWithDatabase{
     String database;
 

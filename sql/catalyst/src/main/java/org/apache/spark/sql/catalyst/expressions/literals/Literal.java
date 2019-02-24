@@ -3,6 +3,7 @@ package org.apache.spark.sql.catalyst.expressions.literals;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.expressions.LeafExpression;
 import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.catalyst.util.DateTimeUtils;
 import org.apache.spark.sql.catalyst.util.MapData;
@@ -19,10 +20,19 @@ import java.sql.Timestamp;
 /**
  * Created by kenya on 2019/1/22.
  */
-public class Literal extends Expression{
+public class Literal extends LeafExpression{
 
     Object value;
     DataType dataType;
+
+
+    public static Literal TrueLiteral(){
+        return new Literal(true, new BooleanType());
+    }
+
+    public static Literal FalseLiteral(){
+        return new Literal(false, new BooleanType());
+    }
 
     public Literal(Object value, DataType dataType){
         validateLiteralValue(value, dataType);

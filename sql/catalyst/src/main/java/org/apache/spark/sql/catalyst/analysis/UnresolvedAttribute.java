@@ -9,9 +9,10 @@ import java.util.List;
 /**
  * Created by kenya on 2019/1/22.
  */
+
 public class UnresolvedAttribute extends Attribute{
 
-    List<String> nameParts;
+    public List<String> nameParts;
 
     public UnresolvedAttribute(List<String> nameParts){
         this.nameParts = nameParts;

@@ -1,11 +1,13 @@
 package org.apache.spark.sql.catalyst.expressions;
 
+import lombok.Data;
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
 
 /**
  * Created by kenya on 2019/1/19.
  */
+@Data
 public abstract class Expression extends TreeNode<Expression> {
 
     boolean foldable = false;

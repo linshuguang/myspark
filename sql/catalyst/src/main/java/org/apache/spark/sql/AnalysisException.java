@@ -26,4 +26,6 @@ public class AnalysisException extends RuntimeException implements Serializable 
         this(message, null, null, null, null);
     }
 
+    public AnalysisException(){}
+
 }

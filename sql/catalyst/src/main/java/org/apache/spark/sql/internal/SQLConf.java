@@ -33,10 +33,15 @@ public class SQLConf implements Serializable {
         }
     };
 
-    public static SQLConf get(){
+    public static SQLConf get() {
         //confGetter.get();
         return new SQLConf();
     }
+
+    public boolean escapedStringLiterals(){
+        return true;
+    }
+
 
 
     public <T> boolean getConf(String entry ){

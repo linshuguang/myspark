@@ -1,6 +1,7 @@
 package org.apache.spark.sql.catalyst.expressions.windowExpressions;
 
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.expressions.SortOrder;
 
 import java.util.List;
 
@@ -9,8 +10,15 @@ import java.util.List;
  */
 public class WindowSpecDefinition extends Expression implements WindowSpec {
     List<Expression>partitionSpec;
-    //List<SortOrder>
-    //: Seq[Expression],
-//    orderSpec: Seq[SortOrder],
-//    frameSpecification: WindowFrame
+    List<SortOrder> orderSpec;
+    WindowFrame frameSpecification;
+
+    public WindowSpecDefinition(List<Expression>partitionSpec,
+            List<SortOrder> orderSpec,
+            WindowFrame frameSpecification){
+        this.partitionSpec = partitionSpec;
+        this.orderSpec = orderSpec;
+        this.frameSpecification = frameSpecification;
+    }
+
 }

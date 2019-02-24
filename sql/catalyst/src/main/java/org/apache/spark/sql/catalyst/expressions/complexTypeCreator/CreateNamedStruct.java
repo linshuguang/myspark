@@ -1,7 +1,9 @@
 package org.apache.spark.sql.catalyst.expressions.complexTypeCreator;
 
+import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,6 +16,31 @@ public class CreateNamedStruct extends  CreateNamedStructLike {
         this.children = children;
     }
 
+    List<Expression>nameExprs=null;
+    List<Expression>valExprs=null;
+
+    public List<Expression> nameExprs(){
+        if(nameExprs==null){
+            lazyVal();
+        }
+        return nameExprs;
+    }
+
+    public List<Expression> valExprs(){
+        if(valExprs==null){
+            lazyVal();
+        }
+        return valExprs;
+    }
+
+    private synchronized void lazyVal(){
+        nameExprs = new ArrayList<>();
+        valExprs = new ArrayList<>();
+        for(int i =0, j=i+1; i<children.size() && j<children.size() ;i+=2){
+            nameExprs.add(children.get(i));
+            valExprs.add(children.get(j));
+        }
+    }
 
 
 }

@@ -17,6 +17,10 @@ public class CreateStruct implements FunctionBuilder {
 
     @Override
     public CreateNamedStruct apply(List<Expression> children){
+        return build(children);
+    }
+
+    public static CreateNamedStruct build(List<Expression> children){
         int index = 0;
         List<Expression> expr = new ArrayList<>();
         for(Expression e: children){
