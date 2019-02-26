@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 
@@ -21,6 +22,10 @@ import org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
  */
 public class ParserUtils {
 
+    public static boolean isValidInt(BigDecimal bd) {
+        return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
+    }
+
     public static <T, R extends ParserRuleContext> T withOrigin(R ctx, Function<R, T>f){
 
         Origin current = CurrentOrigin.get();
@@ -33,6 +38,19 @@ public class ParserUtils {
             ret = null;
         }
         return ret;
+    }
+
+    @FunctionalInterface
+    interface MyReduceFunctionalInterface<T> {
+
+        public T apply(T A1, T A2);
+    }
+    public static <T> T reduce(List<T> lists, MyReduceFunctionalInterface<T>f){
+        T t = lists.get(0);
+        for(int i=1;i<lists.size();i++){
+            t = f.apply(t, lists.get(i));
+        }
+        return t;
     }
 
     public static void require(boolean requirement, Object message){
@@ -206,6 +224,19 @@ public class ParserUtils {
           tList.add(f.apply(ctx));
       }
       return tList;
+    }
+
+
+    public static <C, T > List<T> flatMap(
+            List<C> ctxs,
+            Function<C,List<T>>f
+
+    ){
+        List<T> tList = new ArrayList<>();
+        for(C ctx: ctxs){
+            tList.addAll(f.apply(ctx));
+        }
+        return tList;
     }
 
     @FunctionalInterface

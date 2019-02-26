@@ -15,6 +15,8 @@ public class DecimalType extends DateType {
     //val USER_DEFAULT: DecimalType = DecimalType(10, 0)
     public static int MINIMUM_ADJUSTED_SCALE = 6;
 
+    public static DecimalType USER_DEFAULT = new DecimalType(10, 0);
+
     int precision;
     int scale;
 

@@ -22,4 +22,9 @@ public class MetadataBuilder {
         return new Metadata(map);
     }
 
+    public MetadataBuilder withMetadata(Metadata metadata){
+        map.putAll(metadata.map);
+        return this;
+    }
+
 }

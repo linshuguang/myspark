@@ -23,4 +23,17 @@ public class StructField {
         this(name, dataType,true, new Metadata());
     }
 
+    public StructField(String name, DataType dataType, boolean nullable){
+        this(name, dataType,nullable, new Metadata());
+    }
+
+    public StructField withComment(String comment){
+        MetadataBuilder builder = new MetadataBuilder();
+        builder.withMetadata(metadata);
+        builder.putString("comment", comment);
+        Metadata newMetadata = builder.build();
+        metadata = newMetadata;
+        return this;
+    }
+
 }

@@ -7,6 +7,8 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute;
 import org.apache.spark.sql.catalyst.analysis.unresolved.*;
 import org.apache.spark.sql.catalyst.catalog.CatalogStorageFormat;
@@ -55,11 +57,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.types.*;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.function.Function;
 import org.apache.spark.sql.catalyst.expressions.complexTypeCreator.CreateStruct;
+import org.apache.spark.sql.types.HiveStringTypes.CharType;
+import org.apache.spark.sql.types.HiveStringTypes.VarcharType;
+import org.apache.spark.unsafe.types.CalendarInterval;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.DatatypeConverter;
@@ -1266,6 +1272,20 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     }
 
     @Override
+    public List<String> visitIdentifierSeq(SqlBaseParser.IdentifierSeqContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IdentifierSeqContext , List<String>>() {
+            @Override
+            public List<String> apply(SqlBaseParser.IdentifierSeqContext identifierSeqContext){
+                List<String> result = new ArrayList<>();
+                for(SqlBaseParser.IdentifierContext identifierContext: ctx.identifier()){
+                    result.add(identifierContext.getText());
+                }
+                return result;
+            }
+        });
+    }
+
+    @Override
     public TableIdentifier visitTableIdentifier(SqlBaseParser.TableIdentifierContext ctx){
         return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TableIdentifierContext, TableIdentifier>() {
             @Override
@@ -2139,517 +2159,319 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
 
 
+    @Override
+    public Literal visitIntegerLiteral(SqlBaseParser.IntegerLiteralContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntegerLiteralContext, Literal>() {
+            @Override
+            public Literal apply(SqlBaseParser.IntegerLiteralContext ictx) {
+                BigDecimal v = new BigDecimal(ictx.getText());
+                //TODO:
+//                if()
+//                BigDecimal(ctx.getText) match {
+//                    case v if v.isValidInt =>
+//                        Literal(v.intValue())
+//                    case v if v.isValidLong =>
+//                        Literal(v.longValue())
+//                    case v => Literal(v.underlying())
+//                }
+
+
+                return Literal.build(v);
+            }
+        });
+
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    @Override
-//    public List<String> visitIdentifierList(SqlBaseParser.IdentifierListContext ctx) {
-//        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IdentifierListContext, List<String>>() {
-//            @Override
-//            public List<String> apply(SqlBaseParser.IdentifierListContext identifierListContext) {
-//                return visitIdentifierSeq(identifierListContext.identifierSeq());
-//            }
-//        });
-//
-//    }
 
     @Override
-    public List<String> visitIdentifierSeq(SqlBaseParser.IdentifierSeqContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IdentifierSeqContext , List<String>>() {
+    public Literal visitDecimalLiteral(SqlBaseParser.DecimalLiteralContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.DecimalLiteralContext, Literal>() {
             @Override
-            public List<String> apply(SqlBaseParser.IdentifierSeqContext identifierSeqContext){
-                List<String> result = new ArrayList<>();
-                for(SqlBaseParser.IdentifierContext identifierContext: ctx.identifier()){
-                    result.add(identifierContext.getText());
-                }
-                return result;
+            public Literal apply(SqlBaseParser.DecimalLiteralContext dctx) {
+                return Literal.build(new BigDecimal(dctx.getText()));
             }
         });
     }
 
-    /**
-     * Add a query specification to a logical plan. The query specification is the core of the logical
-     * plan, this is where sourcing (FROM clause), transforming (SELECT TRANSFORM/MAP/REDUCE),
-     * projection (SELECT), aggregation (GROUP BY ... HAVING ...) and filtering (WHERE) takes place.
-     *
-     * Note that query hints are ignored (both by the parser and the builder).
-     */
+    private Literal numericLiteral(SqlBaseParser.NumberContext ctx,
+                                   BigDecimal minValue,
+                                   BigDecimal maxValue,
+                                   String typeName,
+                                   Function<String ,Object>converter){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.NumberContext, Literal>() {
+            @Override
+            public Literal apply(SqlBaseParser.NumberContext nctx) {
 
-
-    interface FilterOperation {
-        LogicalPlan apply(SqlBaseParser.BooleanExpressionContext ctx , LogicalPlan plan);
+                String rawStrippedQualifier = nctx.getText().substring(0, nctx.getText().length() - 1);
+                try {
+                    BigDecimal rawBigDecimal = new BigDecimal(rawStrippedQualifier);
+                    if (rawBigDecimal.compareTo(minValue)==-1 || rawBigDecimal.compareTo(maxValue)==1) {
+                        throw new ParseException("Numeric literal ${rawStrippedQualifier} does not " +
+                                "fit in range [${minValue}, ${maxValue}] for type ${typeName}", nctx);
+                    }
+                    return Literal.build(converter.apply(rawStrippedQualifier));
+                } catch(Exception e) {
+                    if(e instanceof NumberFormatException){
+                        throw new ParseException(e.getMessage(), nctx);
+                    }
+                }
+                return null;
+            }
+        });
     }
 
-    interface WithHavingOperation {
-        LogicalPlan apply(SqlBaseParser.BooleanExpressionContext ctx , LogicalPlan plan);
+
+
+    @Override
+    public Literal visitTinyIntLiteral(SqlBaseParser.TinyIntLiteralContext ctx){
+        return numericLiteral(ctx, new BigDecimal(Byte.MIN_VALUE), new BigDecimal(Byte.MAX_VALUE), new ByteType().simpleString(), new Function<String, Object>() {
+            @Override
+            public Object apply(String str){
+                return Byte.valueOf(str);
+            }
+        });
+    }
+
+
+    @Override
+    public Literal visitSmallIntLiteral(SqlBaseParser.SmallIntLiteralContext ctx){
+        return numericLiteral(ctx, new BigDecimal(Short.MIN_VALUE), new BigDecimal(Short.MAX_VALUE), new ShortType().simpleString(), new Function<String, Object>() {
+            @Override
+            public Object apply(String str){
+                return Short.valueOf(str);
+            }
+        });
+    }
+
+
+    @Override
+    public Literal visitBigIntLiteral(SqlBaseParser.BigIntLiteralContext ctx){
+        return numericLiteral(ctx, new BigDecimal(Long.MIN_VALUE), new BigDecimal(Long.MAX_VALUE), new LongType().simpleString(), new Function<String, Object>() {
+            @Override
+            public Object apply(String str){
+                return Long.valueOf(str);
+            }
+        });
+    }
+
+    @Override
+    public Literal visitDoubleLiteral(SqlBaseParser.DoubleLiteralContext ctx){
+        return numericLiteral(ctx, new BigDecimal(Double.MIN_VALUE), new BigDecimal(Double.MAX_VALUE), new DoubleType().simpleString(), new Function<String, Object>() {
+            @Override
+            public Object apply(String str){
+                return Double.valueOf(str);
+            }
+        });
+    }
+
+
+    @Override
+    public Literal visitBigDecimalLiteral(SqlBaseParser.BigDecimalLiteralContext ctx){
+        String raw = ctx.getText().substring(0, ctx.getText().length() - 2);
+        try {
+            return Literal.build(new BigDecimal(raw));
+        } catch (Exception e){
+            if(e instanceof AnalysisException){
+                throw new ParseException(e.getMessage(), ctx);
+            }
+        }
+        return null;
+    }
+
+
+    @Override
+    public Literal visitStringLiteral(SqlBaseParser.StringLiteralContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.StringLiteralContext, Literal>() {
+            @Override
+            public Literal apply(SqlBaseParser.StringLiteralContext sctx) {
+                return Literal.build(createString(sctx));
+            }
+        });
+    }
+
+
+    private String createString(SqlBaseParser.StringLiteralContext ctx){
+        //TODO:
+//            if (conf.escapedStringLiterals) {
+//                ctx.STRING().asScala.map(stringWithoutUnescape).mkString
+//        } else {
+//        ctx.STRING().asScala.map(string).mkString
+//        }
+//        }
+        return null;
+    }
+
+    @Override
+    public Literal visitInterval(SqlBaseParser.IntervalContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntervalContext, Literal>() {
+            @Override
+            public Literal apply(SqlBaseParser.IntervalContext ictx) {
+                List<CalendarInterval>intervals = ParserUtils.map(ictx.intervalField(), new Function<SqlBaseParser.IntervalFieldContext, CalendarInterval>() {
+                    @Override
+                    public CalendarInterval apply(SqlBaseParser.IntervalFieldContext intervalFieldContext) {
+                        return visitIntervalField(intervalFieldContext);
+                    }
+                });
+                ParserUtils.validate(intervals.size()>0, "at least one time unit should be given for interval literal", ictx);
+                return Literal.build(ParserUtils.reduce(intervals, (a1,a2)->{ return a1.add(a2);}));
+            }
+        });
+
+    }
+
+    @Override
+    public CalendarInterval visitIntervalField(SqlBaseParser.IntervalFieldContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntervalFieldContext, CalendarInterval>() {
+            @Override
+            public CalendarInterval apply(SqlBaseParser.IntervalFieldContext ictx) {
+                String s = ictx.value.getText();
+
+                try {
+                    String unitText = ictx.unit.getText().toLowerCase(Locale.ROOT);
+                    String intervalText = ictx.to.getText().toLowerCase(Locale.ROOT);
+
+                    CalendarInterval interval;
+                    if(unitText!=null && intervalText==null){
+                        if(unitText.endsWith("s")){
+                            interval = CalendarInterval.fromSingleUnitString(unitText.substring(0, unitText.length() - 1), s);
+                        }else{
+                            interval = CalendarInterval.fromSingleUnitString(unitText, s);
+                        }
+                    }else if(StringUtils.equals(unitText,"year") && StringUtils.equals(intervalText,"month")){
+                        interval = CalendarInterval.fromYearMonthString(s);
+                    }else if(StringUtils.equals(unitText,"day") && StringUtils.equals(intervalText,"second")){
+                        interval = CalendarInterval.fromDayTimeString(s);
+                    }else{
+                        throw new ParseException("Intervals FROM $from TO $t are not supported.", ictx);
+                    }
+                    ParserUtils.validate(interval != null, "No interval can be constructed", ictx);
+                    return interval;
+                } catch(Exception e) {
+                    if(e instanceof IllegalArgumentException){
+                        ParseException pe = new ParseException(e.getMessage(), ctx);
+                        pe.setStackTrace(e.getStackTrace());
+                        throw  pe;
+                    }
+                }
+                return null;
+            }
+        });
+    }
+
+
+    private DataType visitSparkDataType(SqlBaseParser.DataTypeContext ctx){
+        return HiveStringType.replaceCharType(typedVisit(ctx));
     }
 
 
 
 
+    @Override
+    public DataType visitPrimitiveDataType(SqlBaseParser.PrimitiveDataTypeContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PrimitiveDataTypeContext, DataType>() {
+            @Override
+            public DataType apply(SqlBaseParser.PrimitiveDataTypeContext pctx) {
+                String dataType = pctx.identifier().getText().toLowerCase(Locale.ROOT);
+                List<TerminalNode> terminalNodes = pctx.INTEGER_VALUE();
+                if(terminalNodes.size()==0){
+                    switch (dataType){
+                        case "boolean":
+                            return new BooleanType();
+                        case "tinyint":
+                        case "byte":
+                            return new ByteType();
+                        case "smallint":
+                        case  "short":
+                            return new ShortType();
+                        case "int":
+                        case  "integer":
+                            return new IntegerType();
+                        case "bigint":
+                        case  "long":
+                            return new LongType();
+                        case "float":
+                            return new FloatType();
+                        case "double":
+                            return new DoubleType();
+                        case "date":
+                            return new DateType();
+                        case "timestamp":
+                            return new TimestampType();
+                        case "string":
+                            return new StringType();
+                        case "binary":
+                            return new BinaryType();
+                        case "decimal":
+                            return DecimalType.USER_DEFAULT;
+                    }
+                }else if(terminalNodes.size()==1){
+                    TerminalNode length = terminalNodes.get(0);
+                    switch (dataType){
+                        case "char":
+                            return new CharType(Integer.valueOf(length.getText()));
+                        case "varchar":
+                            return new VarcharType(Integer.valueOf(length.getText()));
+                        case "decimal":
+                            TerminalNode precision = length;
+                            return new DecimalType(Integer.valueOf(precision.getText()), 0);
+                    }
+                }else{
+                    TerminalNode dt = terminalNodes.get(0);
+                    List<TerminalNode> params = terminalNodes.subList(1,terminalNodes.size()-1);
+                    String dtStr = dt.getText();
+                    if(params.size()>0){
+                        dtStr = "$dt(${params.mkString})";
+                    }
+                    throw new ParseException("DataType $dtStr is not supported.", pctx);
+                }
+                return null;
+            }
+        });
+    }
 
+    @Override
+    public DataType visitComplexDataType(SqlBaseParser.ComplexDataTypeContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexDataTypeContext, DataType>() {
+            @Override
+            public DataType apply(SqlBaseParser.ComplexDataTypeContext cctx) {
 
+                switch ( cctx.complex.getType()){
+                    case SqlBaseParser.ARRAY:
+                        return new ArrayType(typedVisit(cctx.dataType(0)));
+                    case SqlBaseParser.MAP:
+                        return new MapType(typedVisit(cctx.dataType(0)), typedVisit(cctx.dataType(1)));
+                    case SqlBaseParser.STRUCT :
 
+                        return new StructType(visitComplexColTypeList(cctx.complexColTypeList()));
+                }
 
-
-
-
-
-
-
-
-
+                return null;
+            }
+        });
+    }
 
     protected StructType createSchema(SqlBaseParser.ColTypeListContext ctx){
         return new StructType(visitColTypeList(ctx));
     }
 
 
-//    @Override
-//    public List<StructField> visitColTypeList(SqlBaseParser.ColTypeListContext ctx){
-//        List<StructField> structFields = new ArrayList<>();
-//        for(SqlBaseParser.ColTypeContext colTypeContext :ctx.colType()){
-//
-//        }
-//        return structFields;
-//    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public <T>LogicalPlan optional(LogicalPlan plan, T ctx, Function<T, LogicalPlan> f){
-        if(ctx!=null){
-            return f.apply(ctx);
-        }else{
-            return plan;
-        }
-    }
-
-    private DataType visitSparkDataType(SqlBaseParser.DataTypeContext ctx){
-         return HiveStringType.replaceCharType((DataType)typedVisit(ctx));
-    }
 
     @Override
     public List<StructField> visitColTypeList(SqlBaseParser.ColTypeListContext ctx){
         return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ColTypeListContext, List<StructField>>() {
-                    @Override
-                    public List<StructField> apply(SqlBaseParser.ColTypeListContext colTypeListContext) {
-                        //ctx.colType().asScala.map(visitColType);
-                        List<SqlBaseParser.ColTypeContext>colTypes = ctx.colType();
+            @Override
+            public List<StructField> apply(SqlBaseParser.ColTypeListContext colTypeListContext) {
+                //ctx.colType().asScala.map(visitColType);
+                List<SqlBaseParser.ColTypeContext>colTypes = ctx.colType();
 
-                        for(SqlBaseParser.ColTypeContext colType: colTypes){
+                for(SqlBaseParser.ColTypeContext colType: colTypes){
 
-                        }
+                }
 
-                        return null;
-                    }
-                });
+                return null;
+            }
+        });
     }
 
     @Override
@@ -2676,17 +2498,62 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
 
 
-    private String createString(SqlBaseParser.StringLiteralContext ctx){
-//            if (conf.escapedStringLiterals) {
-//                ctx.STRING().asScala.map(stringWithoutUnescape).mkString
-//        } else {
-//        ctx.STRING().asScala.map(string).mkString
-//        }
-//        }
-        return null;
+    protected StructType createStructType(SqlBaseParser.ComplexColTypeListContext ctx){
+        return new StructType(visitComplexColTypeList(ctx));
+    }
+
+    
+    @Override
+    public List<StructField> visitComplexColTypeList(SqlBaseParser.ComplexColTypeListContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeListContext, List<StructField>>() {
+            @Override
+            public List<StructField> apply(SqlBaseParser.ComplexColTypeListContext cctx) {
+                return ParserUtils.map(cctx.complexColType(), new Function<SqlBaseParser.ComplexColTypeContext, StructField>() {
+                    @Override
+                    public StructField apply(SqlBaseParser.ComplexColTypeContext ccctx){
+                        return visitComplexColType(ccctx);
+                    }
+
+                });
+            }
+        });
     }
 
 
+    @Override
+    public StructField visitComplexColType(SqlBaseParser.ComplexColTypeContext ctx){
+        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeContext, StructField>() {
+            @Override
+            public StructField apply(SqlBaseParser.ComplexColTypeContext cctx) {
+                StructField structField = new StructField(cctx.identifier().getText(), typedVisit(cctx.dataType()),true);
+                if (cctx.STRING() == null) {
+                    return structField;
+                }else{
+                    return structField.withComment(ParserUtils.string(cctx.STRING()));
+                }
+            }
+        });
+    }
+
+
+
+
+    interface FilterOperation {
+        LogicalPlan apply(SqlBaseParser.BooleanExpressionContext ctx , LogicalPlan plan);
+    }
+
+    interface WithHavingOperation {
+        LogicalPlan apply(SqlBaseParser.BooleanExpressionContext ctx , LogicalPlan plan);
+    }
+
+
+    public <T>LogicalPlan optional(LogicalPlan plan, T ctx, Function<T, LogicalPlan> f){
+        if(ctx!=null){
+            return f.apply(ctx);
+        }else{
+            return plan;
+        }
+    }
 
 
 }
