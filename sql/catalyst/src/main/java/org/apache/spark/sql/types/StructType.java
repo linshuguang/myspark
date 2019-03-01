@@ -4,6 +4,7 @@ import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.AttributeReference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,6 +17,10 @@ public class StructType extends DataType {
 
     public StructType(List<StructField> fields){
         this.fields = fields;
+    }
+
+    public StructType(StructField...fields){
+        this(Arrays.asList(fields));
     }
 
     public List<AttributeReference> toAttributes(){

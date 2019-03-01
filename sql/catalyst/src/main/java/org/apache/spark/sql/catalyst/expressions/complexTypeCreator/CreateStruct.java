@@ -1,6 +1,6 @@
 package org.apache.spark.sql.catalyst.expressions.complexTypeCreator;
 
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder;
+import org.apache.spark.sql.catalyst.analysis.FunctionBuilder;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpression;
 import org.apache.spark.sql.catalyst.expressions.literals.Literal;

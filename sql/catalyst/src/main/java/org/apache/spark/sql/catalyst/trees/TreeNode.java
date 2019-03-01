@@ -1,6 +1,9 @@
 package org.apache.spark.sql.catalyst.trees;
 
+import javafx.util.Pair;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -13,6 +16,12 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
     protected List<BaseType> children = new ArrayList<BaseType>();
 
     //Set<BaseType> containsChild =
+
+    private Set<TreeNode>containsChild;
+
+    private Set<TreeNode> getContainsChild(){
+        return new HashSet<>(children);
+    }
 
     public static class Origin{
         Integer line = null;
@@ -53,6 +62,20 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
 
     }
 
+    public BaseType transformDown(Function<BaseType, BaseType> rule){
+//        val afterRule = CurrentOrigin.withOrigin(origin) {
+//            rule.applyOrElse(this, identity[BaseType])
+//        }
+//
+//        // Check if unchanged and then possibly return old copy to avoid gc churn.
+//        if (this fastEquals afterRule) {
+//            mapChildren(_.transformDown(rule))
+//        } else {
+//            afterRule.mapChildren(_.transformDown(rule))
+//        }
+        return null;
+    }
+
     public BaseType transformUp(Function<BaseType, BaseType> rule){
 
 //        val afterRuleOnChildren = mapChildren(_.transformUp(rule))
@@ -65,81 +88,65 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
 //                rule.applyOrElse(afterRuleOnChildren, identity[BaseType])
 //            }
 //        }
-        return self;
+        return (BaseType)this;
     }
 
+    public boolean fastEquals(TreeNode other){
+        return this.equals(other) || this == other;
+    }
 
-//    public BaseType mapChildren(Function<BaseType,BaseType>f){
-//        if (children.size()>0) {
-//            var changed = false
-//            def mapChild(child: Any): Any = child match {
-//                case arg: TreeNode[_] if containsChild(arg) =>
-//                    val newChild = f(arg.asInstanceOf[BaseType])
-//                    if (!(newChild fastEquals arg)) {
-//                    changed = true
-//                    newChild
-//                } else {
-//                    arg
-//                }
-//                case tuple@(arg1: TreeNode[_], arg2: TreeNode[_]) =>
-//                    val newChild1 = if (containsChild(arg1)) {
-//                    f(arg1.asInstanceOf[BaseType])
-//                } else {
-//                    arg1.asInstanceOf[BaseType]
-//                }
-//
-//                    val newChild2 = if (containsChild(arg2)) {
-//                    f(arg2.asInstanceOf[BaseType])
-//                } else {
-//                    arg2.asInstanceOf[BaseType]
-//                }
-//
-//                    if (!(newChild1 fastEquals arg1) || !(newChild2 fastEquals arg2)) {
-//                    changed = true
-//                    (newChild1, newChild2)
-//                } else {
-//                    tuple
-//                }
-//                case other => other
-//            }
-//
-//            val newArgs = mapProductIterator {
-//                case arg: TreeNode[_] if containsChild(arg) =>
-//                    val newChild = f(arg.asInstanceOf[BaseType])
-//                    if (!(newChild fastEquals arg)) {
-//                    changed = true
-//                    newChild
-//                } else {
-//                    arg
-//                }
-//                case Some(arg: TreeNode[_]) if containsChild(arg) =>
-//                    val newChild = f(arg.asInstanceOf[BaseType])
-//                    if (!(newChild fastEquals arg)) {
-//                    changed = true
-//                    Some(newChild)
-//                } else {
-//                    Some(arg)
-//                }
-//                case m: Map[_, _] => m.mapValues {
-//                    case arg: TreeNode[_] if containsChild(arg) =>
-//                        val newChild = f(arg.asInstanceOf[BaseType])
-//                        if (!(newChild fastEquals arg)) {
-//                        changed = true
-//                        newChild
-//                    } else {
-//                        arg
-//                    }
-//                    case other => other
-//                }.view.force // `mapValues` is lazy and we need to force it to materialize
-//                case d: DataType => d // Avoid unpacking Structs
-//                case args: Stream[_] => args.map(mapChild).force // Force materialization on stream
-//                case args: Traversable[_] => args.map(mapChild)
-//                case nonChild: AnyRef => nonChild
-//                case null => null
-//            }
-//            if (changed) makeCopy(newArgs) else this
-//        } else {
-//           return this;
-//        }
-//    }
+    public BaseType mapChildren(Function<BaseType,BaseType>f){
+        if (children.size()>0) {
+            boolean changed = false;
+
+            Function<Object,Object> mapChild= new Function<Object, Object>() {
+                @Override
+                public Object apply(Object child){
+                    if(child instanceof TreeNode){
+                        if(getContainsChild().contains(child)){
+                            TreeNode arg = (TreeNode)child;
+                            BaseType newChild = f.apply((BaseType)arg);
+                            if(newChild.fastEquals(arg)){
+                                //TODO
+                                //changed = true;
+                                return newChild;
+                            }else{
+                                return arg;
+                            }
+                        }
+                    }else if(child instanceof Pair){
+                        Pair<TreeNode,TreeNode> args = (Pair<TreeNode,TreeNode>)child;
+                        if(args!=null){
+                            BaseType newChild1;
+                            if(getContainsChild().contains(args.getKey())){
+                                newChild1 = f.apply((BaseType) args.getKey());
+                            }else{
+                                newChild1 = (BaseType)args.getKey();
+                            }
+                            BaseType newChild2;
+                            if(getContainsChild().contains(args.getValue())){
+                                newChild2 = f.apply((BaseType) args.getValue());
+                            }else{
+                                newChild2 = (BaseType)args.getValue();
+                            }
+
+                            if (!(newChild1.fastEquals(args.getKey())) || !(newChild2.fastEquals(args.getValue()))) {
+                                //TODO
+                                //changed = true;
+                                return new Pair<>(newChild1, newChild2);
+                            } else {
+                                return child;
+                            }
+                        }
+                    }else{
+                        return child;
+                    }
+                    return null;
+                }
+            };
+        } else {
+           return (BaseType)this;
+        }
+        return null;
+    }
 }

@@ -227,6 +227,10 @@ public class ParserUtils {
     }
 
 
+
+
+
+
     public static <C, T > List<T> flatMap(
             List<C> ctxs,
             Function<C,List<T>>f
@@ -240,7 +244,7 @@ public class ParserUtils {
     }
 
     @FunctionalInterface
-    interface FoldLeftFunctionalInterface <T, C>{
+    public interface FoldLeftFunctionalInterface <T, C>{
 
         public T apply(T left, C right);
     }

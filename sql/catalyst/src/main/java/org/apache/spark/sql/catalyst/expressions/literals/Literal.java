@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Timestamp;
-//import org.apache.spark.unsafe.types.*;
 
 /**
  * Created by kenya on 2019/1/22.

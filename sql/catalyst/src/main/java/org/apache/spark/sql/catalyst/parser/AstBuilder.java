@@ -2502,7 +2502,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
         return new StructType(visitComplexColTypeList(ctx));
     }
 
-    
+
     @Override
     public List<StructField> visitComplexColTypeList(SqlBaseParser.ComplexColTypeListContext ctx){
         return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeListContext, List<StructField>>() {
