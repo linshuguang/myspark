@@ -8,14 +8,13 @@ import java.io.Serializable;
  * Created by kenya on 2019/1/20.
  */
 public class AnalysisException extends RuntimeException implements Serializable {
-    String message;
     Integer line;
     Integer startPosition;
     LogicalPlan plan;
     Throwable cause;
 
     public AnalysisException(String message, Integer line, Integer startPosition, LogicalPlan plan, Throwable cause){
-        this.message = message;
+        super(message);
         this.line = line;
         this.startPosition = startPosition;
         this.plan = plan;
@@ -26,6 +25,6 @@ public class AnalysisException extends RuntimeException implements Serializable 
         this(message, null, null, null, null);
     }
 
-    public AnalysisException(){}
+    //public AnalysisException(){}
 
 }

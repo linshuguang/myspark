@@ -1,6 +1,7 @@
 package org.apache.spark.sql.catalyst.trees;
 
 import javafx.util.Pair;
+import org.apache.spark.sql.catalyst.expressions.predicates.In;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,15 +25,40 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
     }
 
     public static class Origin{
-        Integer line = null;
-        Integer startPosition = null;
+        Integer line;
+        Integer startPosition;
 
         public Origin(Integer line, Integer startPosition){
             this.line = line;
             this.startPosition = startPosition;
         }
 
-        public Origin(){}
+        public Origin(){
+            this.line=null;
+            this.startPosition = null;
+        }
+
+        private boolean equal(Integer i, Integer j){
+            if(i==null && j==null){
+                return true;
+            }else if((i==null && j!=null)||i!=null && j==null){
+                return false;
+            }else{
+                return i.compareTo(j)==0;
+            }
+        }
+
+        @Override
+        public boolean equals(Object other){
+            if(other!=null && other instanceof Origin){
+                Origin o = (Origin) other;
+                if(this==o){
+                    return true;
+                }
+                return equal(o.line,this.line) && equal(o.startPosition,this.startPosition);
+            }
+            return false;
+        }
     }
 
     public static class CurrentOrigin{

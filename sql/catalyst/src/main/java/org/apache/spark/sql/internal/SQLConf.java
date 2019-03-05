@@ -1,6 +1,8 @@
 package org.apache.spark.sql.internal;
 
 import javafx.util.Pair;
+import org.apache.spark.SparkContext;
+import org.apache.spark.TaskContext;
 import org.apache.spark.sql.catalyst.parser.ParserInterface;
 import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.internal.config.ConfigBuilder;
@@ -81,6 +83,13 @@ public class SQLConf implements Serializable {
     };
 
     public static SQLConf get() {
+        if (TaskContext.get() != null) {
+            return new ReadOnlySQLConf(TaskContext.get());
+        }else{
+            //boolean isSchedulerEventLoopThread
+            SparkContext sparkContext = SparkContext.getActive();
+            sparkContext.dagScheduler.eventProcessLoop.eventThread
+        }
         //confGetter.get();
         return new SQLConf();
     }

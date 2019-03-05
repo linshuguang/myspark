@@ -47,4 +47,11 @@ public class TypedConfigBuilder<T> {
         return entry;
     }
 
+
+    public <T>OptionalConfigEntry<T> createOptional(){
+        OptionalConfigEntry<T> entry = new OptionalConfigEntry(parent.getKey(), parent.get_alternatives(), converter,
+                stringConverter, parent.get_doc(), parent.is_public());
+        parent.get_onCreate().apply(entry);
+        return entry;
+    }
 }

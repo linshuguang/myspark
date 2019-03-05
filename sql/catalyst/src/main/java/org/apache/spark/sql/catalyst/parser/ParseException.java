@@ -9,7 +9,6 @@ import org.apache.spark.sql.catalyst.trees.TreeNode;
  */
 public class ParseException extends AnalysisException{
     String command;
-    String message;
     TreeNode.Origin start;
     TreeNode.Origin stop;
 
@@ -18,8 +17,8 @@ public class ParseException extends AnalysisException{
     }
 
     public ParseException(String command, String message, TreeNode.Origin start, TreeNode.Origin stop){
+        super(message);
         this.command = command;
-        this.message = message;
         this.start  = start;
         this.stop = stop;
     }

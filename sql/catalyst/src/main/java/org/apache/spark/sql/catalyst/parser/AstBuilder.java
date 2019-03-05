@@ -54,7 +54,7 @@ import org.apache.spark.sql.catalyst.plans.logical.hints.UnresolvedHint;
 import org.apache.spark.sql.catalyst.util.RandomSampler;
 import org.apache.spark.sql.internal.SQLConf;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.spark.sql.catalyst.parser.ParserUtils;
+import static org.apache.spark.sql.catalyst.parser.ParserUtils.*;
 import org.apache.spark.sql.types.*;
 
 import java.math.BigDecimal;
@@ -101,7 +101,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitSingleStatement(SqlBaseParser.SingleStatementContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleStatementContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleStatementContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.SingleStatementContext ctx) {
                 return (LogicalPlan) visit(ctx.statement());
@@ -113,7 +113,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitSingleExpression(SqlBaseParser.SingleExpressionContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleExpressionContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleExpressionContext, Expression>() {
                     @Override
                     public Expression apply(SqlBaseParser.SingleExpressionContext singleExpressionContext) {
                         return (Expression)visitNamedExpression(ctx.namedExpression());
@@ -123,7 +123,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public TableIdentifier visitSingleTableIdentifier(SqlBaseParser.SingleTableIdentifierContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleTableIdentifierContext, TableIdentifier>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleTableIdentifierContext, TableIdentifier>() {
             @Override
             public TableIdentifier apply(SqlBaseParser.SingleTableIdentifierContext singleTableIdentifierContext) {
                 return (TableIdentifier)visitTableIdentifier(ctx.tableIdentifier());
@@ -133,7 +133,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public FunctionIdentifier visitSingleFunctionIdentifier(SqlBaseParser.SingleFunctionIdentifierContext ctx){
-            return  ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleFunctionIdentifierContext, FunctionIdentifier>() {
+            return  withOrigin(ctx, new Function<SqlBaseParser.SingleFunctionIdentifierContext, FunctionIdentifier>() {
                         @Override
                         public FunctionIdentifier apply(SqlBaseParser.SingleFunctionIdentifierContext singleFunctionIdentifierContext) {
                             return (FunctionIdentifier)visitFunctionIdentifier(ctx.functionIdentifier());
@@ -143,7 +143,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public DataType visitSingleDataType(SqlBaseParser.SingleDataTypeContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleDataTypeContext, DataType>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleDataTypeContext, DataType>() {
             @Override
             public DataType apply(SqlBaseParser.SingleDataTypeContext singleDataTypeContext) {
                 return (DataType)visitSparkDataType(ctx.dataType());
@@ -153,7 +153,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public StructType visitSingleTableSchema(SqlBaseParser.SingleTableSchemaContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleTableSchemaContext, StructType>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleTableSchemaContext, StructType>() {
             @Override
             public StructType apply(SqlBaseParser.SingleTableSchemaContext singleTableSchemaContext) {
                 return new StructType(visitColTypeList(ctx.colTypeList()));
@@ -167,7 +167,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitQuery(SqlBaseParser.QueryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.QueryContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.QueryContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.QueryContext queryContext) {
                 LogicalPlan query = plan(ctx.queryNoWith());
@@ -181,7 +181,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                                     SubqueryAlias namedQuery = visitNamedQuery(nCtx);
                                     ctes.add(new Pair<>(namedQuery.alias(), namedQuery));
                                 }
-                                ParserUtils.checkDuplicateKeys(ctes, queryContext);
+                                checkDuplicateKeys(ctes, queryContext);
                                 return new With(query, ctes);
                             }
                         }
@@ -193,7 +193,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public SubqueryAlias visitNamedQuery(SqlBaseParser.NamedQueryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.NamedQueryContext, SubqueryAlias>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.NamedQueryContext, SubqueryAlias>() {
                     @Override
                     public SubqueryAlias apply(SqlBaseParser.NamedQueryContext namedQueryContext) {
                         return new SubqueryAlias(namedQueryContext.name.getText(), plan(namedQueryContext.query()));
@@ -208,20 +208,20 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
         LogicalPlan from = visitFromClause(ctx.fromClause());
 
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.MultiInsertQueryContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.MultiInsertQueryContext, LogicalPlan>() {
                     @Override
                     public LogicalPlan apply(SqlBaseParser.MultiInsertQueryContext context) {
 
                         List<LogicalPlan> inserts = new ArrayList<>();
                         for(SqlBaseParser.MultiInsertQueryBodyContext body: context.multiInsertQueryBody()){
-                            ParserUtils.validate(
+                            validate(
                                     ()->{return body.querySpecification().fromClause() == null;},
                                     "Multi-Insert queries cannot have a FROM clause in their individual SELECT statements",
                                     body);
 
                             LogicalPlan plan = withQuerySpecification(body.querySpecification(), from);
-                            plan =ParserUtils.optionalMap(plan, body.queryOrganization(), (c,p)->{return withQueryResultClauses(c,p);});
-                            plan =ParserUtils.optionalMap(plan, body.insertInto(), (c,p)->{return withInsertInto(c,p);});
+                            plan =optionalMap(plan, body.queryOrganization(), (c,p)->{return withQueryResultClauses(c,p);});
+                            plan =optionalMap(plan, body.insertInto(), (c,p)->{return withInsertInto(c,p);});
                             inserts.add(plan);
                         }
 
@@ -237,7 +237,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitSingleInsertQuery(SqlBaseParser.SingleInsertQueryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SingleInsertQueryContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SingleInsertQueryContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.SingleInsertQueryContext ictx){
                 LogicalPlan plan = plan(ictx.queryTerm());
@@ -294,7 +294,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withInsertInto(
             SqlBaseParser.InsertIntoContext ctx,
             LogicalPlan query) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InsertIntoContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InsertIntoContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.InsertIntoContext ictx) {
 
@@ -329,7 +329,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public InsertTableParams visitInsertIntoTable(
             SqlBaseParser.InsertIntoTableContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InsertIntoTableContext, InsertTableParams>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InsertIntoTableContext, InsertTableParams>() {
             @Override
             public InsertTableParams apply(SqlBaseParser.InsertIntoTableContext ictx) {
                 TableIdentifier tableIdent = (TableIdentifier) visitTableIdentifier(ictx.tableIdentifier());
@@ -343,7 +343,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public InsertTableParams visitInsertOverwriteTable(
             SqlBaseParser.InsertOverwriteTableContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteTableContext, InsertTableParams>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteTableContext, InsertTableParams>() {
             @Override
             public InsertTableParams apply(SqlBaseParser.InsertOverwriteTableContext ictx) {
                 assert (ictx.OVERWRITE() != null);
@@ -369,7 +369,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public InsertDirParams visitInsertOverwriteDir(
             SqlBaseParser.InsertOverwriteDirContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteDirContext, InsertDirParams>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteDirContext, InsertDirParams>() {
             @Override
             public InsertDirParams apply(SqlBaseParser.InsertOverwriteDirContext ictx) {
                 throw new ParseException("INSERT OVERWRITE DIRECTORY is not supported", ictx);
@@ -381,7 +381,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public InsertDirParams visitInsertOverwriteHiveDir(
             SqlBaseParser.InsertOverwriteHiveDirContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteHiveDirContext, InsertDirParams>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InsertOverwriteHiveDirContext, InsertDirParams>() {
             @Override
             public InsertDirParams apply(SqlBaseParser.InsertOverwriteHiveDirContext ictx) {
                 throw new ParseException("INSERT OVERWRITE DIRECTORY is not supported", ictx);
@@ -393,7 +393,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public Map<String, String>visitPartitionSpec(
             SqlBaseParser.PartitionSpecContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PartitionSpecContext, Map<String, String>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PartitionSpecContext, Map<String, String>>() {
             @Override
             public Map<String, String> apply(SqlBaseParser.PartitionSpecContext qctx) {
 
@@ -415,7 +415,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     protected Map<String,String> visitNonOptionalPartitionSpec(
             SqlBaseParser.PartitionSpecContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PartitionSpecContext, Map<String, String>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PartitionSpecContext, Map<String, String>>() {
             @Override
             public Map<String, String> apply(SqlBaseParser.PartitionSpecContext pctx) {
                 Map<String, String> map = visitPartitionSpec(pctx);
@@ -431,7 +431,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
 
     protected String visitStringConstant(SqlBaseParser.ConstantContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ConstantContext, String>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ConstantContext, String>() {
                     @Override
                     public String apply(SqlBaseParser.ConstantContext constantContext) {
                         if(constantContext instanceof SqlBaseParser.StringLiteralContext){
@@ -453,7 +453,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withQueryResultClauses(
             SqlBaseParser.QueryOrganizationContext ctx,
             LogicalPlan query){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.QueryOrganizationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.QueryOrganizationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.QueryOrganizationContext qctx){
 
@@ -514,7 +514,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                             "Combination of ORDER BY/SORT BY/DISTRIBUTE BY/CLUSTER BY is not supported", qctx);
                 }
 
-                LogicalPlan withWindow = ParserUtils.optionalMap(withOrder,qctx.windows(), (c,p)->{
+                LogicalPlan withWindow = optionalMap(withOrder,qctx.windows(), (c,p)->{
                     return withWindows(c,p);
                 });
 
@@ -537,7 +537,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     @Override
     public LogicalPlan visitQuerySpecification(
             SqlBaseParser.QuerySpecificationContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.QuerySpecificationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.QuerySpecificationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.QuerySpecificationContext qctx) {
 
@@ -571,7 +571,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
         };
 
 
-        return  ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.QuerySpecificationContext, LogicalPlan>() {
+        return  withOrigin(ctx, new Function<SqlBaseParser.QuerySpecificationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.QuerySpecificationContext querySpecificationContext) {
 
@@ -625,7 +625,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                             return withGenerate(query, left);
                         });
 
-                        LogicalPlan withFilter = ParserUtils.optionalMap(withLateralView,querySpecificationContext.where, (c,p) -> {
+                        LogicalPlan withFilter = optionalMap(withLateralView,querySpecificationContext.where, (c,p) -> {
                             return filter.apply(c,p);
                         });
 
@@ -660,7 +660,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                                     }
                                 }else if (qctx.aggregation() != null) {
                                     LogicalPlan aggregate = withAggregation(qctx.aggregation(), namedExpressions, withFilter);
-                                    return ParserUtils.optionalMap(aggregate,qctx.having,(c,p) -> {
+                                    return optionalMap(aggregate,qctx.having,(c,p) -> {
                                         return withHaving.apply(c,p);
                                     } );
                                 }else{
@@ -683,7 +683,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
 
 
-                        LogicalPlan withWindow = ParserUtils.optionalMap(withFilter, querySpecificationContext.windows(),(c,q)->{
+                        LogicalPlan withWindow = optionalMap(withFilter, querySpecificationContext.windows(),(c,q)->{
                             return withWindows(c,q);
                         });
 
@@ -714,7 +714,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitFromClause(SqlBaseParser.FromClauseContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.FromClauseContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.FromClauseContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.FromClauseContext fromClauseContext) {
                 LogicalPlan from = ParserUtils.foldLeft(ctx.relation(), null, (left,relation) -> {
@@ -744,7 +744,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitSetOperation(SqlBaseParser.SetOperationContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SetOperationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SetOperationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.SetOperationContext sctx){
                 LogicalPlan left = plan(sctx.left);
@@ -789,7 +789,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withWindows(
             SqlBaseParser.WindowsContext ctx,
             LogicalPlan query) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.WindowsContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.WindowsContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.WindowsContext wctx) {
 
@@ -832,7 +832,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             List<NamedExpression>selectExpressions,
             LogicalPlan query){
 
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.AggregationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.AggregationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.AggregationContext aggregationContext){
                 List<Expression> groupByExpressions = expressionList(aggregationContext.groupingExpressions);
@@ -866,7 +866,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withHints(
             SqlBaseParser.HintContext ctx,
             LogicalPlan query){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.HintContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.HintContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.HintContext hintContext){
                 LogicalPlan plan = query;
@@ -894,7 +894,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withPivot(
             SqlBaseParser.PivotClauseContext ctx,
             LogicalPlan query){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PivotClauseContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PivotClauseContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.PivotClauseContext pivotClauseContext){
                 List<Expression> aggregates = new ArrayList<>();
@@ -931,7 +931,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitPivotValue(SqlBaseParser.PivotValueContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PivotValueContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PivotValueContext, Expression>() {
 
             @Override
             public Expression apply(SqlBaseParser.PivotValueContext pivotValueContext) {
@@ -951,7 +951,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withGenerate(
             LogicalPlan query,
             SqlBaseParser.LateralViewContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.LateralViewContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.LateralViewContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.LateralViewContext lateralViewContext){
                 List<Expression> expressions = expressionList(lateralViewContext.expression());
@@ -975,7 +975,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitRelation(SqlBaseParser.RelationContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.RelationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.RelationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.RelationContext rctx) {
                 return withJoinRelations(plan(rctx.relationPrimary()), rctx);
@@ -988,7 +988,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     private LogicalPlan withJoinRelations(LogicalPlan base, SqlBaseParser.RelationContext ctx){
         return ParserUtils.foldLeft(ctx.joinRelation(), base, (left,join )->{
 
-            return ParserUtils.withOrigin(join, new Function<SqlBaseParser.JoinRelationContext, LogicalPlan>() {
+            return withOrigin(join, new Function<SqlBaseParser.JoinRelationContext, LogicalPlan>() {
                 @Override
                 public LogicalPlan apply(SqlBaseParser.JoinRelationContext joinRelationContext){
                     JoinType baseJoinType;
@@ -1037,7 +1037,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     }
 
     private LogicalPlan withSample(SqlBaseParser.SampleContext ctx, LogicalPlan query){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SampleContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SampleContext, LogicalPlan>() {
 
 
 
@@ -1106,7 +1106,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitSubquery(SqlBaseParser.SubqueryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SubqueryContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SubqueryContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.SubqueryContext sctx){
                 return plan(sctx.queryNoWith());
@@ -1119,7 +1119,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitTable(SqlBaseParser.TableContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TableContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.TableContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.TableContext tctx){
                 return new UnresolvedRelation(visitTableIdentifier(tctx.tableIdentifier()));
@@ -1131,12 +1131,12 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitTableName(SqlBaseParser.TableNameContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TableNameContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.TableNameContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.TableNameContext tctx){
                 TableIdentifier tableId = visitTableIdentifier(tctx.tableIdentifier());
                 LogicalPlan table = mayApplyAliasPlan(tctx.tableAlias(), new UnresolvedRelation(tableId));
-                return ParserUtils.optionalMap(table,tctx.sample(),(c,p)->{
+                return optionalMap(table,tctx.sample(),(c,p)->{
                     return withSample(c,p);
                 });
             }
@@ -1146,7 +1146,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitTableValuedFunction(SqlBaseParser.TableValuedFunctionContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TableValuedFunctionContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.TableValuedFunctionContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.TableValuedFunctionContext tctx) {
                 SqlBaseParser.FunctionTableContext func = tctx.functionTable();
@@ -1164,7 +1164,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                         }),
                         aliases
                 );
-                return ParserUtils.optionalMap(tvf,func.tableAlias().strictIdentifier(), (c,p)->{
+                return optionalMap(tvf,func.tableAlias().strictIdentifier(), (c,p)->{
                     return aliasPlan(c,p);
                 } );
             }
@@ -1175,7 +1175,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitInlineTable(SqlBaseParser.InlineTableContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.InlineTableContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.InlineTableContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.InlineTableContext ictx) {
 
@@ -1204,7 +1204,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                     }
                 }
                 UnresolvedInlineTable table = new UnresolvedInlineTable(aliases, rows);
-                return ParserUtils.optionalMap(table, ictx.tableAlias().strictIdentifier(), (c, p) -> {
+                return optionalMap(table, ictx.tableAlias().strictIdentifier(), (c, p) -> {
                     return aliasPlan(c, p);
                 });
             }
@@ -1214,10 +1214,10 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitAliasedRelation(SqlBaseParser.AliasedRelationContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.AliasedRelationContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.AliasedRelationContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.AliasedRelationContext actx){
-                LogicalPlan relation = ParserUtils.optionalMap(plan(actx.relation()), actx.sample(),(c,p)->{
+                LogicalPlan relation = optionalMap(plan(actx.relation()), actx.sample(),(c,p)->{
                     return withSample(c,p);
                 });
                 return mayApplyAliasPlan(actx.tableAlias(), relation);
@@ -1227,10 +1227,10 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public LogicalPlan visitAliasedQuery(SqlBaseParser.AliasedQueryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.AliasedQueryContext, LogicalPlan>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.AliasedQueryContext, LogicalPlan>() {
             @Override
             public LogicalPlan apply(SqlBaseParser.AliasedQueryContext actx){
-                LogicalPlan relation = ParserUtils.optionalMap(
+                LogicalPlan relation = optionalMap(
                         plan(actx.queryNoWith()),
                                 actx.sample(),
                         (c,p)->{return withSample(c,p);});
@@ -1263,7 +1263,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     }
     @Override
     public List<String> visitIdentifierList(SqlBaseParser.IdentifierListContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IdentifierListContext, List<String>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.IdentifierListContext, List<String>>() {
             @Override
             public List<String> apply(SqlBaseParser.IdentifierListContext ictx){
                 return visitIdentifierSeq(ictx.identifierSeq());
@@ -1273,7 +1273,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public List<String> visitIdentifierSeq(SqlBaseParser.IdentifierSeqContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IdentifierSeqContext , List<String>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.IdentifierSeqContext , List<String>>() {
             @Override
             public List<String> apply(SqlBaseParser.IdentifierSeqContext identifierSeqContext){
                 List<String> result = new ArrayList<>();
@@ -1287,7 +1287,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public TableIdentifier visitTableIdentifier(SqlBaseParser.TableIdentifierContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TableIdentifierContext, TableIdentifier>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.TableIdentifierContext, TableIdentifier>() {
             @Override
             public TableIdentifier apply(SqlBaseParser.TableIdentifierContext tctx){
                 return new TableIdentifier(tctx.table.getText(), tctx.db.getText());
@@ -1298,7 +1298,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public FunctionIdentifier visitFunctionIdentifier(SqlBaseParser.FunctionIdentifierContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.FunctionIdentifierContext, FunctionIdentifier>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.FunctionIdentifierContext, FunctionIdentifier>() {
             @Override
             public FunctionIdentifier apply(SqlBaseParser.FunctionIdentifierContext fctx){
                 return new FunctionIdentifier(fctx.function.getText(), fctx.db.getText());
@@ -1321,7 +1321,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitStar(SqlBaseParser.StarContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.StarContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.StarContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.StarContext sctx){
                 return new UnresolvedStar(ParserUtils.map(sctx.qualifiedName().identifier(), new Function<SqlBaseParser.IdentifierContext, String>() {
@@ -1337,7 +1337,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitNamedExpression(SqlBaseParser.NamedExpressionContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.NamedExpressionContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.NamedExpressionContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.NamedExpressionContext nctx){
                 Expression e = expression(nctx.expression());
@@ -1357,7 +1357,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     //very trick
     @Override
     public Expression visitLogicalBinary(SqlBaseParser.LogicalBinaryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.LogicalBinaryContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.LogicalBinaryContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.LogicalBinaryContext lctx){
                 int expressionType = lctx.operator.getType();
@@ -1426,7 +1426,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitLogicalNot(SqlBaseParser.LogicalNotContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.LogicalNotContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.LogicalNotContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.LogicalNotContext lctx){
                 return new Not(expression(lctx.booleanExpression()));
@@ -1442,7 +1442,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitComparison(SqlBaseParser.ComparisonContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComparisonContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ComparisonContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ComparisonContext cctx){
                 Expression left = expression(cctx.left);
@@ -1473,7 +1473,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitPredicated(SqlBaseParser.PredicatedContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PredicatedContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PredicatedContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.PredicatedContext pctx){
                 Expression e = expression(pctx.valueExpression());
@@ -1487,7 +1487,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     }
 
     private Expression withPredicate(Expression e, SqlBaseParser.PredicateContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PredicateContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PredicateContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.PredicateContext pctx){
                 Function<Expression,Expression>invertIfNotDefined = new Function<Expression, Expression>() {
@@ -1560,7 +1560,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitArithmeticBinary(SqlBaseParser.ArithmeticBinaryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ArithmeticBinaryContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ArithmeticBinaryContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ArithmeticBinaryContext actx){
                 Expression left = expression(actx.left);
@@ -1595,7 +1595,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitArithmeticUnary(SqlBaseParser.ArithmeticUnaryContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ArithmeticUnaryContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ArithmeticUnaryContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ArithmeticUnaryContext actx){
                 Expression value = expression(actx.valueExpression());
@@ -1615,7 +1615,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitCast(SqlBaseParser.CastContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.CastContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.CastContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.CastContext cctx){
                 return  new Cast(expression(cctx.expression()), visitSparkDataType(cctx.dataType()));
@@ -1625,7 +1625,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitStruct(SqlBaseParser.StructContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.StructContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.StructContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.StructContext sctx){
                 CreateStruct createStruct = new CreateStruct();
@@ -1641,7 +1641,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitFirst(SqlBaseParser.FirstContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.FirstContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.FirstContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.FirstContext fctx){
                 boolean ignoreNullsExpr = fctx.IGNORE() != null;
@@ -1652,7 +1652,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitLast(SqlBaseParser.LastContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.LastContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.LastContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.LastContext fctx){
                 boolean ignoreNullsExpr = fctx.IGNORE() != null;
@@ -1663,7 +1663,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitPosition(SqlBaseParser.PositionContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PositionContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PositionContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.PositionContext pctx){
                 return new StringLocate(expression(pctx.substr), expression(pctx.str));
@@ -1674,7 +1674,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitExtract(SqlBaseParser.ExtractContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ExtractContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ExtractContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ExtractContext ectx){
                 switch (ectx.field.getText().toUpperCase(Locale.ROOT)){
@@ -1730,7 +1730,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitFunctionCall(SqlBaseParser.FunctionCallContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.FunctionCallContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.FunctionCallContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.FunctionCallContext fctx) {
 
@@ -1795,7 +1795,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitLambda(SqlBaseParser.LambdaContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.LambdaContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.LambdaContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.LambdaContext lctx){
                 List<NamedExpression> arguments = ParserUtils.map(lctx.IDENTIFIER(), new Function<TerminalNode, NamedExpression>() {
@@ -1825,7 +1825,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public WindowSpecReference visitWindowRef(SqlBaseParser.WindowRefContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.WindowRefContext, WindowSpecReference>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.WindowRefContext, WindowSpecReference>() {
             @Override
             public WindowSpecReference apply(SqlBaseParser.WindowRefContext wctx){
                 return new WindowSpecReference(wctx.identifier().getText());
@@ -1836,7 +1836,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public WindowSpecDefinition visitWindowDef(SqlBaseParser.WindowDefContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.WindowDefContext, WindowSpecDefinition>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.WindowDefContext, WindowSpecDefinition>() {
             @Override
             public WindowSpecDefinition apply(SqlBaseParser.WindowDefContext wctx) {
                 List<Expression>partition =  ParserUtils.map(wctx.partition, new Function<SqlBaseParser.ExpressionContext, Expression>() {
@@ -1889,7 +1889,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitFrameBound(SqlBaseParser.FrameBoundContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.FrameBoundContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.FrameBoundContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.FrameBoundContext fctx) {
 
@@ -1921,7 +1921,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
         @Override
         public Expression visitRowConstructor(SqlBaseParser.RowConstructorContext ctx){
-            return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.RowConstructorContext, Expression>() {
+            return withOrigin(ctx, new Function<SqlBaseParser.RowConstructorContext, Expression>() {
                 @Override
                 public Expression apply(SqlBaseParser.RowConstructorContext fctx) {
 
@@ -1938,7 +1938,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitSubqueryExpression(SqlBaseParser.SubqueryExpressionContext ctx){
-            return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SubqueryExpressionContext, Expression>() {
+            return withOrigin(ctx, new Function<SqlBaseParser.SubqueryExpressionContext, Expression>() {
                 @Override
                 public Expression apply(SqlBaseParser.SubqueryExpressionContext sctx) {
                     return new ScalarSubquery(plan(sctx.query()));
@@ -1948,7 +1948,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitSimpleCase(SqlBaseParser.SimpleCaseContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SimpleCaseContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SimpleCaseContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.SimpleCaseContext sctx) {
                 Expression e = expression(sctx.value);
@@ -1965,7 +1965,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitSearchedCase(SqlBaseParser.SearchedCaseContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SearchedCaseContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SearchedCaseContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.SearchedCaseContext sctx) {
                 List<Pair<Expression,Expression>> branches = ParserUtils.map(sctx.whenClause(), new Function<SqlBaseParser.WhenClauseContext, Pair<Expression,Expression>>() {
@@ -1982,7 +1982,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
 
     private boolean canApplyRegex(ParserRuleContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<ParserRuleContext, Boolean>() {
+        return withOrigin(ctx, new Function<ParserRuleContext, Boolean>() {
             @Override
             public Boolean apply(ParserRuleContext pctx) {
                 ParserRuleContext parent = pctx.getParent();
@@ -1999,7 +1999,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitDereference(SqlBaseParser.DereferenceContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.DereferenceContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.DereferenceContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.DereferenceContext dctx) {
                 String attr = dctx.fieldName.getText();
@@ -2025,7 +2025,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitColumnReference(SqlBaseParser.ColumnReferenceContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ColumnReferenceContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ColumnReferenceContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ColumnReferenceContext columnReferenceContext) {
 //                ctx.getStart.getText match {
@@ -2046,7 +2046,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitSubscript(SqlBaseParser.SubscriptContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SubscriptContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SubscriptContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.SubscriptContext sctx) {
                 return new UnresolvedExtractValue(expression(sctx.value), expression(sctx.index));
@@ -2056,7 +2056,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Expression visitParenthesizedExpression(SqlBaseParser.ParenthesizedExpressionContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ParenthesizedExpressionContext, Expression>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ParenthesizedExpressionContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.ParenthesizedExpressionContext pctx) {
                 return expression(pctx.expression());
@@ -2066,7 +2066,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public SortOrder visitSortItem(SqlBaseParser.SortItemContext ctx) {
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.SortItemContext, SortOrder>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.SortItemContext, SortOrder>() {
             @Override
             public SortOrder apply(SqlBaseParser.SortItemContext sortItemContext) {
                 SortDirection direction;
@@ -2093,7 +2093,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitTypeConstructor(SqlBaseParser.TypeConstructorContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.TypeConstructorContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.TypeConstructorContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.TypeConstructorContext tctx) {
                 String value = ParserUtils.string(tctx.STRING());
@@ -2125,7 +2125,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitNullLiteral(SqlBaseParser.NullLiteralContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.NullLiteralContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.NullLiteralContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.NullLiteralContext nctx) {
                 return Literal.build(null);
@@ -2136,7 +2136,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitBooleanLiteral(SqlBaseParser.BooleanLiteralContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.BooleanLiteralContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.BooleanLiteralContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.BooleanLiteralContext bctx) {
                 if (Boolean.valueOf(bctx.getText())) {
@@ -2161,7 +2161,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitIntegerLiteral(SqlBaseParser.IntegerLiteralContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntegerLiteralContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.IntegerLiteralContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.IntegerLiteralContext ictx) {
                 BigDecimal v = new BigDecimal(ictx.getText());
@@ -2186,7 +2186,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitDecimalLiteral(SqlBaseParser.DecimalLiteralContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.DecimalLiteralContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.DecimalLiteralContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.DecimalLiteralContext dctx) {
                 return Literal.build(new BigDecimal(dctx.getText()));
@@ -2199,7 +2199,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                                    BigDecimal maxValue,
                                    String typeName,
                                    Function<String ,Object>converter){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.NumberContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.NumberContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.NumberContext nctx) {
 
@@ -2282,7 +2282,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitStringLiteral(SqlBaseParser.StringLiteralContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.StringLiteralContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.StringLiteralContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.StringLiteralContext sctx) {
                 return Literal.build(createString(sctx));
@@ -2304,7 +2304,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public Literal visitInterval(SqlBaseParser.IntervalContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntervalContext, Literal>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.IntervalContext, Literal>() {
             @Override
             public Literal apply(SqlBaseParser.IntervalContext ictx) {
                 List<CalendarInterval>intervals = ParserUtils.map(ictx.intervalField(), new Function<SqlBaseParser.IntervalFieldContext, CalendarInterval>() {
@@ -2322,7 +2322,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public CalendarInterval visitIntervalField(SqlBaseParser.IntervalFieldContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.IntervalFieldContext, CalendarInterval>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.IntervalFieldContext, CalendarInterval>() {
             @Override
             public CalendarInterval apply(SqlBaseParser.IntervalFieldContext ictx) {
                 String s = ictx.value.getText();
@@ -2369,7 +2369,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public DataType visitPrimitiveDataType(SqlBaseParser.PrimitiveDataTypeContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.PrimitiveDataTypeContext, DataType>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.PrimitiveDataTypeContext, DataType>() {
             @Override
             public DataType apply(SqlBaseParser.PrimitiveDataTypeContext pctx) {
                 String dataType = pctx.identifier().getText().toLowerCase(Locale.ROOT);
@@ -2432,7 +2432,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public DataType visitComplexDataType(SqlBaseParser.ComplexDataTypeContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexDataTypeContext, DataType>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ComplexDataTypeContext, DataType>() {
             @Override
             public DataType apply(SqlBaseParser.ComplexDataTypeContext cctx) {
 
@@ -2459,7 +2459,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public List<StructField> visitColTypeList(SqlBaseParser.ColTypeListContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ColTypeListContext, List<StructField>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ColTypeListContext, List<StructField>>() {
             @Override
             public List<StructField> apply(SqlBaseParser.ColTypeListContext colTypeListContext) {
                 //ctx.colType().asScala.map(visitColType);
@@ -2476,7 +2476,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public StructField  visitColType(SqlBaseParser.ColTypeContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ColTypeContext, StructField>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ColTypeContext, StructField>() {
             @Override
             public StructField apply(SqlBaseParser.ColTypeContext colTypeContext) {
 
@@ -2505,7 +2505,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public List<StructField> visitComplexColTypeList(SqlBaseParser.ComplexColTypeListContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeListContext, List<StructField>>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeListContext, List<StructField>>() {
             @Override
             public List<StructField> apply(SqlBaseParser.ComplexColTypeListContext cctx) {
                 return ParserUtils.map(cctx.complexColType(), new Function<SqlBaseParser.ComplexColTypeContext, StructField>() {
@@ -2522,7 +2522,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
 
     @Override
     public StructField visitComplexColType(SqlBaseParser.ComplexColTypeContext ctx){
-        return ParserUtils.withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeContext, StructField>() {
+        return withOrigin(ctx, new Function<SqlBaseParser.ComplexColTypeContext, StructField>() {
             @Override
             public StructField apply(SqlBaseParser.ComplexColTypeContext cctx) {
                 StructField structField = new StructField(cctx.identifier().getText(), typedVisit(cctx.dataType()),true);

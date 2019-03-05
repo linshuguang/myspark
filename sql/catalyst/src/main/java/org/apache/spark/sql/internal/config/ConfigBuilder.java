@@ -98,5 +98,9 @@ public class ConfigBuilder {
         }
     }
 
+    public TypedConfigBuilder<String> stringConf(){
+        return new TypedConfigBuilder(this, (s)->{return s;});
+    }
+
 
 }

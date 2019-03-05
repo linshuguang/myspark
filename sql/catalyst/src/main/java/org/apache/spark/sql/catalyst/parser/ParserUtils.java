@@ -35,7 +35,6 @@ public class ParserUtils {
             ret = f.apply(ctx);
         } finally {
             CurrentOrigin.set(current);
-            ret = null;
         }
         return ret;
     }
@@ -97,7 +96,7 @@ public class ParserUtils {
             char currentChar = b.charAt(i);
             if (enclosure == null) {
                 if (currentChar == '\'' || currentChar == '\"') {
-                    enclosure = currentChar;
+                    enclosure = new Character(currentChar);
                 }
             } else if (enclosure == currentChar) {
                 enclosure = null;
@@ -107,7 +106,11 @@ public class ParserUtils {
                     // \u0000 style character literals.
 
                     int base = i + 2;
-                    int code = 1;
+                    //ParserUtils.foldLeft()
+                    int code = foldLeft(range(0,4),0,(mid,j)->{
+                        int digit = Character.digit(b.charAt(j + base), 16);
+                        return (mid << 4) + digit;
+                    });
 //                    int code = (0 until 4).foldLeft(0) { (mid, j) =>
 //                        val digit = Character.digit(b.charAt(j + base), 16)
 //                        (mid << 4) + digit
@@ -145,13 +148,9 @@ public class ParserUtils {
         return sb.toString();
     }
 
-    public static <T>void checkDuplicateKeys(List<Pair<String, T>>keyPairs, ParserRuleContext ctx) {
-        HashSet<String> tmp =new HashSet<>();
-        for(Pair<String, T> pair: keyPairs){
-            if(tmp.contains(pair.getKey())){
-                throw new ParseException("Found duplicate keys '$key'.", ctx);
-            }
-        }
+
+    public static void operationNotAllowed(String message, ParserRuleContext ctx){
+        throw new ParseException("Operation not allowed: "+message, ctx);
     }
 
     public static String command(ParserRuleContext ctx){
@@ -160,6 +159,9 @@ public class ParserUtils {
     }
 
     public static Origin position(Token token){
+        if(token==null){
+            return new Origin();
+        }
         return new Origin(token.getLine(), token.getCharPositionInLine());
     }
 
@@ -257,6 +259,14 @@ public class ParserUtils {
         return t;
     }
 
+    public static List<Integer> range(int from, int to){
+        List<Integer> ret = new ArrayList<>();
+        for(int i=from; i <to;i++){
+            ret.add(i);
+        }
+        return ret;
+    }
+
     public static <T, C> T foldRight(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
         T initial = t;
 
@@ -303,6 +313,36 @@ public class ParserUtils {
 
     public static <T> List<T> Seq(T ...t){
         return Arrays.asList(t);
+    }
+
+    public static String source(ParserRuleContext ctx){
+        CharStream stream = ctx.getStart().getInputStream();
+        return stream.getText(Interval.of(ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex()));
+    }
+
+    public static String remainder(ParserRuleContext ctx){
+        return remainder(ctx.getStop());
+    }
+
+    public static String remainder(Token token){
+        CharStream stream = token.getInputStream();
+        Interval interval = Interval.of(token.getStopIndex() + 1, stream.size() - 1);
+        return stream.getText(interval);
+    }
+
+    public static <T> void checkDuplicateKeys(List<Pair<String,T>> keyPairs, ParserRuleContext ctx){
+
+        Map<String,Integer> hash = new HashMap<>();
+        for(Pair<String,T>keyPair:keyPairs){
+            String key = keyPair.getKey();
+            if(!hash.containsKey(key)){
+                hash.put(key,0);
+            }
+            hash.put(key,1+hash.get(key));
+            if(hash.get(key)>1){
+                throw new ParseException("Found duplicate keys '"+key+"'.", ctx);
+            }
+        }
     }
 
 }
