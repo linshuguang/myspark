@@ -22,6 +22,16 @@ import org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
  */
 public class ParserUtils {
 
+    public static boolean NonFatal(Throwable t){
+        if(t instanceof VirtualMachineError
+                || t instanceof ThreadDeath
+                || t instanceof InterruptedException
+                || t instanceof LinkageError){
+            return false;
+        }else{
+            return true;
+        }
+    }
     public static boolean isValidInt(BigDecimal bd) {
         return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
     }
@@ -342,6 +352,22 @@ public class ParserUtils {
             if(hash.get(key)>1){
                 throw new ParseException("Found duplicate keys '"+key+"'.", ctx);
             }
+        }
+    }
+
+    public static boolean equals(Object l, Object r){
+
+        if(l==r){
+            return true;
+        }
+
+        if(l==null && r==null){
+            return true;
+        }
+        if(l!=null){
+            return l.equals(r);
+        }else{
+            return r.equals(l);
         }
     }
 

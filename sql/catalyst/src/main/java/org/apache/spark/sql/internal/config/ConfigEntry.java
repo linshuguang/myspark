@@ -39,5 +39,9 @@ public abstract class ConfigEntry<T> {
 
     public abstract T readFrom(ConfigReader reader);
 
+    @Override
+    public String toString(){
+        return key;
+    }
 
 }

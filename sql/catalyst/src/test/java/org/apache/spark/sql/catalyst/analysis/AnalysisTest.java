@@ -21,7 +21,7 @@ public class AnalysisTest extends PlanTest {
     protected Analyzer caseInsensitiveAnalyzer = makeAnalyzer(false);
 
     private Analyzer makeAnalyzer(boolean caseSensitive){
-        SQLConf conf = new SQLConf().copy(new Pair<>(SQLConf.CASE_SENSITIVE ,caseSensitive));
+        SQLConf conf = new SQLConf().copy(new Pair<>(new SQLConf().CASE_SENSITIVE ,caseSensitive));
         SessionCatalog catalog = new SessionCatalog(new InMemoryCatalog(), FunctionRegistry.builtin(), conf);
         try {
             catalog.createDatabase(

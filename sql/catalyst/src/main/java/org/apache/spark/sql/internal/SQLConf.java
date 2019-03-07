@@ -8,6 +8,8 @@ import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.internal.config.ConfigBuilder;
 import org.apache.spark.sql.internal.config.ConfigEntry;
 import org.apache.spark.sql.internal.config.ConfigReader;
+import org.apache.spark.util.Utils;
+import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
 import java.io.Serializable;
@@ -15,11 +17,31 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /**
  * Created by kenya on 2019/1/18.
  */
+
 public class SQLConf implements Serializable {
+
+    public static Map<String,Object> sqlConfEntries  = Collections.synchronizedMap(new HashMap<String,Object>(1));
+
+
+
+    transient static protected Map<String,String> settings = java.util.Collections.synchronizedMap(
+            new HashMap<>());
+
+    transient static protected ConfigReader reader = new ConfigReader(settings);
+
+    private static ThreadLocal<SQLConf> fallbackConf = new ThreadLocal<SQLConf>() {
+        @Override
+        public SQLConf initialValue(){
+            return new SQLConf();
+        }
+    };
+
 
     public static ConfigEntry<Boolean> LEGACY_HAVING_WITHOUT_GROUP_BY_AS_WHERE = buildConf("spark.sql.legacy.parser.havingWithoutGroupByAsWhere")
       .internal()
@@ -31,6 +53,16 @@ public class SQLConf implements Serializable {
     .doc("The max number of iterations the optimizer and analyzer runs.")
     .intConf().createWithDefault(100);
 
+    public static ConfigEntry<Boolean> LEGACY_SETOPS_PRECEDENCE_ENABLED =
+    buildConf("spark.sql.legacy.setopsPrecedence.enabled")
+      .internal()
+      .doc("When set to true and the order of evaluation is not specified by parentheses, the " +
+                   "set operations are performed from left to right as they appear in the query. When set " +
+                   "to false and order of evaluation is not specified by parentheses, INTERSECT operations " +
+                   "are performed before any UNION, EXCEPT and MINUS operations.")
+      .booleanConf()
+              .createWithDefault(false);
+
     public static ConfigEntry<Boolean> CASE_SENSITIVE = buildConf("spark.sql.caseSensitive")
     .internal()
     .doc("Whether the query analyzer should be case sensitive or not. " +
@@ -38,22 +70,27 @@ public class SQLConf implements Serializable {
     .booleanConf()
             .createWithDefault(false);
 
-    private static Map<String,Object> sqlConfEntries = Collections.synchronizedMap(
-            new HashMap<>());
 
-    transient static protected Map<String,String> settings = java.util.Collections.synchronizedMap(
-            new HashMap<>());
 
-    transient static protected ConfigReader reader = new ConfigReader(settings);
+    public SQLConf(){
 
-    private ThreadLocal<SQLConf> fallbackConf = new ThreadLocal<SQLConf>() {
+    }
+
+    public static SQLConf getFallbackConf(){
+        return fallbackConf.get();
+    }
+
+    private static ThreadLocal<SQLConf> existingConf = new ThreadLocal<SQLConf>() {
         @Override
         public SQLConf initialValue(){
-            return new SQLConf();
+            return null;
         }
     };
 
-
+    private static AtomicReference<Function<Void,SQLConf>> confGetter = new AtomicReference<Function<Void,SQLConf>>(
+            (q) ->{
+                return fallbackConf.get();
+            });
 
     public int maxToStringFields(){
         //spark related thins
@@ -65,33 +102,48 @@ public class SQLConf implements Serializable {
     private static void register(ConfigEntry entry){
         synchronized (sqlConfEntries) {
             ParserUtils.require(!sqlConfEntries.containsKey(entry.getKey()),
-                    "Duplicate SQLConfigEntry. ${entry.key} has been registered");
+                    "Duplicate SQLConfigEntry. "+entry.getKey()+" has been registered");
             sqlConfEntries.put(entry.getKey(), entry);
         }
     }
     public static ConfigBuilder buildConf(String key){
-        return new ConfigBuilder(key).onCreate((entry)->{register(entry); return null;});
+        ConfigBuilder configBuilder = new ConfigBuilder(key);
+        return configBuilder.onCreate((entry)->{register(entry); return null;});
     }
 
-    SQLConf getFallbackConf = fallbackConf.get();
 
-    private ThreadLocal<SQLConf> existingConf = new ThreadLocal<SQLConf>() {
-        @Override
-        public SQLConf initialValue(){
-            return null;
-        }
-    };
 
     public static SQLConf get() {
+        //Lead to spark related things
         if (TaskContext.get() != null) {
             return new ReadOnlySQLConf(TaskContext.get());
         }else{
             //boolean isSchedulerEventLoopThread
             SparkContext sparkContext = SparkContext.getActive();
-            sparkContext.dagScheduler.eventProcessLoop.eventThread
+            boolean isSchedulerEventLoopThread = false;
+            if(sparkContext!=null
+                    && sparkContext.dagScheduler()!=null
+                    && sparkContext.dagScheduler().getEventProcessLoop()!=null
+                    && sparkContext.dagScheduler().getEventProcessLoop().getEventThread()!=null){
+                isSchedulerEventLoopThread = sparkContext.dagScheduler().getEventProcessLoop().getEventThread().getId() == Thread.currentThread().getId();
+            }
+
+            if (isSchedulerEventLoopThread) {
+                // DAGScheduler event loop thread does not have an active SparkSession, the `confGetter`
+                // will return `fallbackConf` which is unexpected. Here we require the caller to get the
+                // conf within `withExistingConf`, otherwise fail the query.
+                SQLConf conf = existingConf.get();
+                if (conf != null) {
+                    return conf;
+                } else if (Utils.isTesting()) {
+                    throw new RuntimeException("Cannot get SQLConf inside scheduler event loop thread.");
+                } else {
+                    return confGetter.get().apply((Void)null);
+                }
+            } else {
+                return confGetter.get().apply((Void)null);
+            }
         }
-        //confGetter.get();
-        return new SQLConf();
     }
 
     public boolean escapedStringLiterals(){
@@ -107,7 +159,7 @@ public class SQLConf implements Serializable {
     }
 
     public <T> T getConf(ConfigEntry<T>entry){
-        ParserUtils.require(sqlConfEntries.get(entry.getKey()) == entry, "$entry is not registered");
+        ParserUtils.require(sqlConfEntries.get(entry.getKey()) == entry, entry+" is not registered");
         return (T)entry.readFrom(reader);
     }
 
@@ -160,4 +212,7 @@ public class SQLConf implements Serializable {
         return cloned;
     }
 
+    public boolean setOpsPrecedenceEnforced(){
+        return getConf(LEGACY_SETOPS_PRECEDENCE_ENABLED);
+    }
 }

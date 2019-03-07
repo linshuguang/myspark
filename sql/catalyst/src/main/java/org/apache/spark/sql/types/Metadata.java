@@ -22,4 +22,8 @@ public class Metadata implements Serializable{
         this(new HashMap<>());
     }
 
+    public static Metadata empty(){
+        return new Metadata(new HashMap<>());
+    }
+
 }

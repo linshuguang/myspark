@@ -1,5 +1,7 @@
 package org.apache.spark.sql.internal.config;
 
+import org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators.Except;
+
 import java.util.function.Function;
 
 /**
@@ -30,13 +32,16 @@ public class TypedConfigBuilder<T> {
         if (def instanceof String) {
             return createWithDefaultString((String)def);
         } else {//TODO
-//            T transformedDefault = converter.apply(stringConverter.apply(def));
-//                val entry = new ConfigEntryWithDefault[T](parent.key, parent._alternatives,
-//                        transformedDefault, converter, stringConverter, parent._doc, parent._public)
-//                parent._onCreate.foreach(_(entry))
-//                entry
+            T transformedDefault = converter.apply(stringConverter.apply(def));
+            ConfigEntryWithDefault<T> entry = new ConfigEntryWithDefault(parent.key, parent.get_alternatives(),
+                        transformedDefault, converter, stringConverter, parent.get_doc(), parent.is_public());
+            try {
+                parent.get_onCreate().apply(entry);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return entry;
         }
-        return null;
     }
 
 

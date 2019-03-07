@@ -1,5 +1,6 @@
 package org.apache.spark.sql;
 
+import lombok.Data;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 
 import java.io.Serializable;
@@ -7,6 +8,7 @@ import java.io.Serializable;
 /**
  * Created by kenya on 2019/1/20.
  */
+@Data
 public class AnalysisException extends RuntimeException implements Serializable {
     Integer line;
     Integer startPosition;

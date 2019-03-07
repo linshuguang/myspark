@@ -30,11 +30,13 @@ org\apache\spark\sql\catalyst\parser\AstBuilder$18.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$LateralViewContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ShowTableContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$19$2.class
+org\apache\spark\util\EventLoop.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$IdentifierContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$NonReservedContext.class
 org\apache\spark\sql\catalyst\expressions\datetimeExpressions\Month.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$64$1.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$WindowDefContext.class
+org\apache\spark\storage\BlockManagerMaster.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SortItemContext.class
 org\apache\spark\sql\catalyst\expressions\regexpExpressions\RLike.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ResetConfigurationContext.class
@@ -42,10 +44,12 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$SampleByPercentileContext.cla
 org\apache\spark\sql\catalyst\expressions\bitwiseExpressions\BitwiseOr.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$77.class
 org\apache\spark\sql\catalyst\expressions\literals\Literal.class
+org\apache\spark\scheduler\DAGSchedulerEvent.class
 org\apache\spark\sql\catalyst\expressions\TernaryExpression.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$7$1.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$67$1.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$37.class
+org\apache\spark\scheduler\LiveListenerBus.class
 org\apache\spark\sql\catalyst\expressions\arithmetic\BinaryArithmetic.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$RelationContext.class
 org\apache\spark\sql\catalyst\expressions\complexTypeCreator\CreateNamedStructLike.class
@@ -92,7 +96,9 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$ComplexColTypeContext.class
 org\apache\spark\sql\catalyst\trees\TreeNode$CurrentOrigin$1.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$InsertOverwriteHiveDirContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$NamedExpressionSeqContext.class
+org\apache\spark\MapOutputTracker.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$RenameTablePartitionContext.class
+org\apache\spark\SparkContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$RelationPrimaryContext.class
 org\apache\spark\sql\catalyst\analysis\TypeCheckResult$TypeCheckSuccess.class
 org\apache\spark\sql\catalyst\parser\ParserUtils$FoldLeftFunctionalInterface.class
@@ -129,6 +135,7 @@ org\apache\spark\sql\catalyst\expressions\windowExpressions\CurrentRow.class
 org\apache\spark\sql\catalyst\analysis\EliminateSubqueryAliases.class
 org\apache\spark\sql\catalyst\identifiers\AliasIdentifier.class
 org\apache\spark\sql\catalyst\expressions\predicates\InSubquery.class
+org\apache\spark\util\clock\Clock.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$RowConstructorContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$83.class
 org\apache\spark\sql\catalyst\expressions\predicates\GreaterThanOrEqual.class
@@ -177,7 +184,9 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$PredicatedContext.class
 org\apache\spark\sql\catalyst\parser\ParserDriver.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$InsertIntoContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$62$2.class
+org\apache\spark\storage\BlockManager.class
 org\apache\spark\sql\catalyst\plans\joinTypes\LeftSemi.class
+org\apache\spark\network\BlockDataManager.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DescribeFuncNameContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$15.class
 org\apache\spark\sql\catalyst\plans\logical\ScriptTransformation.class
@@ -232,8 +241,10 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$NullLiteralContext.class
 org\apache\spark\unsafe\types\UTF8String$LongWrapper.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$50$2.class
 org\apache\spark\sql\catalyst\expressions\aggregate\Last.class
+org\apache\spark\SecurityManager.class
 org\apache\spark\sql\catalyst\expressions\windowExpressions\FrameType.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$21$2.class
+org\apache\spark\sql\internal\config\config.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$76.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$81.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$InsertTableParams.class
@@ -245,6 +256,7 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$RefreshTableContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DecimalLiteralContext.class
 org\apache\spark\sql\types\FloatType.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SingleStatementContext.class
+org\apache\spark\scheduler\DAGScheduler.class
 org\apache\spark\sql\catalyst\plans\logical\BinaryNode.class
 org\apache\spark\sql\catalyst\expressions\bitwiseExpressions\BitwiseNot.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$19$4.class
@@ -278,6 +290,7 @@ org\apache\spark\sql\catalyst\expressions\arithmetic\Add.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$AlterViewQueryContext.class
 org\apache\spark\sql\catalyst\plans\logical\basicLogicalOperators\Join.class
 org\apache\spark\sql\catalyst\plans\logical\ScriptInputOutputSchema.class
+org\apache\spark\sql\internal\config\ConfigEntryWithDefault.class
 org\apache\spark\sql\catalyst\expressions\aggregate\AggregateExpression.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$23.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$71.class
@@ -296,6 +309,7 @@ org\apache\spark\sql\types\CalendarIntervalType.class
 org\apache\spark\sql\catalyst\expressions\datetimeExpressions\Minute.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$69.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$67.class
+org\apache\spark\rpc\RpcEndpointRef.class
 org\apache\spark\sql\catalyst\expressions\ExpressionInfo.class
 org\apache\spark\sql\catalyst\expressions\NullOrdering.class
 org\apache\spark\sql\catalyst\expressions\namedExpressions\NamedExpression.class
@@ -303,8 +317,10 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$BigIntLiteralContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$17.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$CreateTableLikeContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$IdentifierCommentContext.class
+org\apache\spark\util\BeanLoader.class
 org\apache\spark\sql\catalyst\expressions\windowExpressions\UnboundedFollowing.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ShowCreateTableContext.class
+org\apache\spark\network\BlockTransferService.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$20.class
 org\apache\spark\sql\internal\SQLConf$2.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$WindowRefContext.class
@@ -329,6 +345,7 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$IdentifierSeqContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ValueExpressionContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$32$1.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$InsertOverwriteTableContext.class
+org\apache\spark\memory\MemoryManager.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$CreateViewContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$JoinCriteriaContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$16.class
@@ -383,6 +400,7 @@ org\apache\spark\sql\catalyst\plans\logical\OrderPreservingUnaryNode.class
 org\apache\spark\sql\types\AbstractDataType.class
 org\apache\spark\sql\catalyst\expressions\datetimeExpressions\Hour.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$QueryPrimaryDefaultContext.class
+org\apache\spark\scheduler\DAGScheduler$DAGSchedulerEventProcessLoop.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$CacheTableContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SubscriptContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$46$2.class
@@ -417,7 +435,9 @@ org\apache\spark\sql\types\AtomicType.class
 org\apache\spark\sql\catalyst\expressions\predicates\BinaryComparison.class
 org\apache\spark\sql\catalyst\expressions\grouping\Cube.class
 org\apache\spark\sql\internal\config\MapProvider.class
+org\apache\spark\broadcast\BroadcastManager.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$MultiInsertQueryContext.class
+org\apache\spark\SparkEnv.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$86.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SampleMethodContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$FilterOperation.class
@@ -434,6 +454,7 @@ org\apache\spark\sql\catalyst\expressions\windowExpressions\WindowExpression.cla
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$RenameTableContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$54.class
 org\apache\spark\sql\catalyst\CatalystTypeConverters.class
+org\apache\spark\util\clock\SystemClock.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$66$1.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$31.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$FrameBoundContext.class
@@ -482,12 +503,14 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$PredicateOperatorContext.clas
 org\apache\spark\sql\catalyst\util\DateTimeUtils.class
 org\apache\spark\sql\catalyst\trees\TreeNode$CurrentOrigin.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$InlineTableContext.class
+org\apache\spark\serializer\SerializerManager.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$AliasedRelationContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$4.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$84.class
 org\apache\spark\sql\catalyst\plans\logical\basicLogicalOperators\OneRowRelation.class
 org\apache\spark\sql\catalyst\expressions\HiveHasher.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ParenthesizedExpressionContext.class
+org\apache\spark\sql\catalyst\parser\ParserDriver$UpperCaseCharStream.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$QueryContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$MultiInsertQueryBodyContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ComplexColTypeListContext.class
@@ -504,6 +527,7 @@ org\apache\spark\sql\catalyst\plans\logical\basicLogicalOperators\Pivot.class
 org\apache\spark\sql\catalyst\expressions\Generator.class
 org\apache\spark\sql\catalyst\expressions\UnaryExpression.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$IntervalLiteralContext.class
+org\apache\spark\MapOutputTrackerMaster.class
 org\apache\spark\sql\catalyst\expressions\predicates\EqualNullSafe.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$35.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$55.class
@@ -526,11 +550,15 @@ org\apache\spark\sql\catalyst\catalog\functionResources\FunctionResource.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$StorageHandlerContext.class
 org\apache\spark\sql\catalyst\catalog\functionResources\DummyFunctionResourceLoader.class
 org\apache\spark\sql\catalyst\expressions\collectionOperations\Concat.class
+org\apache\spark\sql\catalyst\parser\ParserDriver$ParseErrorListener.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$3.class
 org\apache\spark\sql\catalyst\plans\logical\UnaryNode.class
+org\apache\spark\sql\catalyst\parser\ParserDriver$PostProcessor.class
 org\apache\spark\sql\catalyst\expressions\subquery\PlanExpression.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$QuotedIdentifierContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$StatementDefaultContext.class
+org\apache\spark\scheduler\OutputCommitCoordinator.class
+org\apache\spark\scheduler\TaskScheduler.class
 org\apache\spark\sql\types\IntegralType.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SkewSpecContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$LambdaContext.class
@@ -558,6 +586,7 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$GenericFileFormatContext.clas
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$TablePropertyContext.class
 org\apache\spark\sql\catalyst\trees\TreeNode.class
 org\apache\spark\sql\types\BooleanType.class
+org\apache\spark\network\shuffle\ShuffleClient.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SetConfigurationContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseVisitor.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$BooleanValueContext.class
@@ -574,10 +603,13 @@ org\apache\spark\sql\catalyst\plans\logical\basicLogicalOperators\WithWindowDefi
 org\apache\spark\sql\internal\config\OptionalConfigEntry.class
 org\apache\spark\sql\catalyst\expressions\aggregate\AggregateFunction.class
 org\apache\spark\sql\types\NullType.class
+org\apache\spark\serializer\Serializer.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$CastContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$UnsupportedHiveNativeCommandsContext.class
 org\apache\spark\sql\catalyst\parser\ParserInterface.class
 org\apache\spark\unsafe\hash\Murmur3_x86_32.class
+org\apache\spark\util\EventLoop$1.class
+org\apache\spark\shuffle\ShuffleManager.class
 org\apache\spark\sql\catalyst\expressions\Ascending.class
 org\apache\spark\sql\catalyst\parser\SqlBaseLexer.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DescribeTableContext.class
@@ -585,6 +617,7 @@ org\apache\spark\sql\catalyst\plans\joinTypes\JoinType.class
 org\apache\spark\sql\types\DateType.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$PositionContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$51.class
+org\apache\spark\TaskContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ConstantListContext.class
 org\apache\spark\sql\catalyst\expressions\arithmetic\UnaryMinus.class
 org\apache\spark\sql\catalyst\expressions\regexpExpressions\Like.class
@@ -622,7 +655,9 @@ org\apache\spark\sql\internal\SQLConf.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$TableProviderContext.class
 org\apache\spark\sql\catalyst\analysis\unresolved\Star.class
 org\apache\spark\sql\types\HiveStringType.class
+org\apache\spark\rpc\RpcEnv.class
 org\apache\spark\sql\catalyst\plans\joinTypes\LeftAnti.class
+org\apache\spark\sql\internal\ReadOnlySQLConf.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SetQuantifierContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SampleByBytesContext.class
 org\apache\spark\sql\catalyst\parser\ParserUtils.class
@@ -632,6 +667,7 @@ org\apache\spark\sql\catalyst\expressions\windowExpressions\SpecialFrameBoundary
 org\apache\spark\util\Utils.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$LoadDataContext.class
 org\apache\spark\sql\catalyst\util\RandomSampler.class
+org\apache\spark\metrics\MetricsSystem.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$QueryTermDefaultContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$SampleByRowsContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$FileFormatContext.class

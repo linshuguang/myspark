@@ -22,5 +22,22 @@ public class MapType extends DataType {
         this(keyType, valueType, true);
     }
 
+    @Override
+    public boolean equals(Object o){
+        boolean ok = super.equals(o);
+        if(!ok){
+            return false;
+        }
+        MapType m =(MapType)o;
+        ok = equals(keyType,m.keyType);
+        if(!ok){
+            return false;
+        }
+        ok = equals(valueType,m.valueType);
+        if(!ok){
+            return false;
+        }
+        return containsNull==m.containsNull;
+    }
 
 }

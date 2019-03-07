@@ -32,14 +32,14 @@
 
 
     <logger name="org.apache.spark" additivity="false">
-        <level value="WARN"></level>
+        <level value="DEBUG"></level>
         <appender-ref ref="console"/>
     </logger>
 
-    <logger name="org.springframework" additivity="false">
-        <level value="WARN"/>
-        <appender-ref ref="console"/>
-    </logger>
+    <!--<logger name="org.springframework" additivity="false">-->
+        <!--<level value="DEBUG"/>-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</logger>-->
 
     <root>
         <priority value="${log_level}"/>

@@ -10,8 +10,6 @@ import java.util.function.Function;
 /**
  * Created by kenya on 2019/2/26.
  */
-@SuppressWarnings("ALL")
-@RunWith(SpringJUnit4ClassRunner.class)
 public class SparkFunSuite {
 
 

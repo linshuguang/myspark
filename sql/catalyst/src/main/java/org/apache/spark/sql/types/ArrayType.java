@@ -24,5 +24,14 @@ public class ArrayType extends DataType{
     }
 
 
+    @Override
+    public boolean equals(Object o){
+        boolean ok =super.equals(o);
+        if(!ok){
+            return false;
+        }
+        if(this.containsNull!=((ArrayType) o).containsNull);
+        return equals(this.elementType,((ArrayType) o).elementType);
+    }
 
 }

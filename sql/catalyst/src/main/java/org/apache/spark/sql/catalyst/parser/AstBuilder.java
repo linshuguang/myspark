@@ -66,6 +66,7 @@ import org.apache.spark.sql.catalyst.expressions.complexTypeCreator.CreateStruct
 import org.apache.spark.sql.types.HiveStringTypes.CharType;
 import org.apache.spark.sql.types.HiveStringTypes.VarcharType;
 import org.apache.spark.unsafe.types.CalendarInterval;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.DatatypeConverter;
@@ -87,7 +88,6 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     protected <T> T typedVisit(ParseTree ctx){
         return (T)ctx.accept(this);
     }
-
 
 
     @Override
@@ -145,8 +145,8 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     public DataType visitSingleDataType(SqlBaseParser.SingleDataTypeContext ctx){
         return withOrigin(ctx, new Function<SqlBaseParser.SingleDataTypeContext, DataType>() {
             @Override
-            public DataType apply(SqlBaseParser.SingleDataTypeContext singleDataTypeContext) {
-                return (DataType)visitSparkDataType(ctx.dataType());
+            public DataType apply(SqlBaseParser.SingleDataTypeContext sctx) {
+                return (DataType)visitSparkDataType(sctx.dataType());
             }
         });
     }
@@ -2374,21 +2374,21 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             public DataType apply(SqlBaseParser.PrimitiveDataTypeContext pctx) {
                 String dataType = pctx.identifier().getText().toLowerCase(Locale.ROOT);
                 List<TerminalNode> terminalNodes = pctx.INTEGER_VALUE();
-                if(terminalNodes.size()==0){
-                    switch (dataType){
+                if (terminalNodes.size() == 0) {
+                    switch (dataType) {
                         case "boolean":
                             return new BooleanType();
                         case "tinyint":
                         case "byte":
                             return new ByteType();
                         case "smallint":
-                        case  "short":
+                        case "short":
                             return new ShortType();
                         case "int":
-                        case  "integer":
+                        case "integer":
                             return new IntegerType();
                         case "bigint":
-                        case  "long":
+                        case "long":
                             return new LongType();
                         case "float":
                             return new FloatType();
@@ -2405,9 +2405,9 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                         case "decimal":
                             return DecimalType.USER_DEFAULT;
                     }
-                }else if(terminalNodes.size()==1){
+                } else if (terminalNodes.size() == 1) {
                     TerminalNode length = terminalNodes.get(0);
-                    switch (dataType){
+                    switch (dataType) {
                         case "char":
                             return new CharType(Integer.valueOf(length.getText()));
                         case "varchar":
@@ -2416,16 +2416,22 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                             TerminalNode precision = length;
                             return new DecimalType(Integer.valueOf(precision.getText()), 0);
                     }
-                }else{
-                    TerminalNode dt = terminalNodes.get(0);
-                    List<TerminalNode> params = terminalNodes.subList(1,terminalNodes.size()-1);
-                    String dtStr = dt.getText();
-                    if(params.size()>0){
-                        dtStr = "$dt(${params.mkString})";
+                } else if (terminalNodes.size() == 2) {
+                    switch (dataType) {
+                        case "decimal":
+                            TerminalNode precision = terminalNodes.get(0);
+                            TerminalNode scale = terminalNodes.get(1);
+                            return new DecimalType(Integer.valueOf(precision.getText()), Integer.valueOf(scale.getText()));
                     }
-                    throw new ParseException("DataType $dtStr is not supported.", pctx);
                 }
-                return null;
+
+                TerminalNode dt = terminalNodes.get(0);
+                List<TerminalNode> params = terminalNodes.subList(1, terminalNodes.size() - 1);
+                String dtStr = dt.getText();
+                if (params.size() > 0) {
+                    dtStr = "$dt(${params.mkString})";
+                }
+                throw new ParseException("DataType $dtStr is not supported.", pctx);
             }
         });
     }
@@ -2443,7 +2449,12 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                         return new MapType(typedVisit(cctx.dataType(0)), typedVisit(cctx.dataType(1)));
                     case SqlBaseParser.STRUCT :
 
-                        return new StructType(visitComplexColTypeList(cctx.complexColTypeList()));
+                        SqlBaseParser.ComplexColTypeListContext complexColTypeListContext = cctx.complexColTypeList();
+                        if(complexColTypeListContext!=null) {
+                            return new StructType(visitComplexColTypeList(complexColTypeListContext));
+                        }else{
+                            return new StructType();
+                        }
                 }
 
                 return null;

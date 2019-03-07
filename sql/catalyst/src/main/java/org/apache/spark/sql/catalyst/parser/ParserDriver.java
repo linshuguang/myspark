@@ -2,7 +2,10 @@ package org.apache.spark.sql.catalyst.parser;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
+
+import java.util.function.Function;
 
 import static org.apache.spark.sql.catalyst.parser.ParserUtils.*;
 import static org.apache.spark.sql.catalyst.trees.TreeNode.*;
@@ -90,6 +93,39 @@ public class ParserDriver {
                 return la;
             else
                 return Character.toUpperCase(la);
+        }
+    }
+
+    public static class PostProcessor extends SqlBaseBaseListener{
+
+        @Override
+        public void exitQuotedIdentifier(SqlBaseParser.QuotedIdentifierContext ctx){
+            replaceTokenByIdentifier(ctx, 1, (token) ->{
+                // Remove the double back ticks in the string.
+                token.setText(token.getText().replace("``", "`"));
+                return token;
+            });
+        }
+
+        /** Treat non-reserved keywords as Identifiers. */
+        @Override
+        public void exitNonReserved(SqlBaseParser.NonReservedContext ctx){
+            replaceTokenByIdentifier(ctx, 0,(c)->{return c;});
+        }
+
+        private void replaceTokenByIdentifier(
+                ParserRuleContext ctx ,
+                int stripMargins, Function<CommonToken,CommonToken>f){
+            ParserRuleContext parent = ctx.getParent();
+            parent.removeLastChild();
+            Token token = (Token)ctx.getChild(0).getPayload();
+            CommonToken newToken = new CommonToken(
+                    new org.antlr.v4.runtime.misc.Pair(token.getTokenSource(), token.getInputStream()),
+                    SqlBaseParser.IDENTIFIER,
+                    token.getChannel(),
+                    token.getStartIndex() + stripMargins,
+                    token.getStopIndex() - stripMargins);
+            parent.addChild(new TerminalNodeImpl(f.apply(newToken)));
         }
     }
 }

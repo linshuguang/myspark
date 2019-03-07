@@ -1,6 +1,8 @@
 package org.apache.spark.sql.types;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 /**
  * Created by kenya on 2019/1/19.
@@ -34,6 +36,39 @@ public class StructField {
         Metadata newMetadata = builder.build();
         metadata = newMetadata;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        boolean ok = false;
+        if(this==o){
+            return true;
+        }
+        if(o==null){
+            return false;
+        }
+        if(this.getClass()!=o.getClass()){
+            return false;
+        }
+        StructField s= (StructField)o;
+
+        if(!StringUtils.equals(name,s.name)){
+            return false;
+        }
+
+        if(dataType!=null){
+            ok = dataType.equals(s.dataType);
+        }else if(s.dataType!=null){
+            ok = s.dataType.equals(this.dataType);
+        }
+        if(!ok){
+            return false;
+        }
+        ok = this.nullable == s.nullable;
+        if(!ok){
+            return false;
+        }
+        return true;
     }
 
 }

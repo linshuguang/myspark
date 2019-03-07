@@ -54,4 +54,8 @@ public class Utils {
             }
         }
     }
+
+    public static boolean isTesting(){
+        return System.getenv().containsKey("SPARK_TESTING") || System.getProperties().containsKey("spark.testing");
+    }
 }

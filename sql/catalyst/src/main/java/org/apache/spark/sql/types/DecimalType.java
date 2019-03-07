@@ -44,4 +44,14 @@ public class DecimalType extends DateType {
         return new DecimalType(Math.max(d.precision(), d.scale()), d.scale());
     }
 
+    @Override
+    public boolean equals(Object o){
+        boolean ok = super.equals(o);
+        if(ok && o instanceof DecimalType){
+            DecimalType d = (DecimalType)o;
+            return d.precision==this.precision && d.scale==this.scale;
+        }
+        return ok;
+    }
+
 }

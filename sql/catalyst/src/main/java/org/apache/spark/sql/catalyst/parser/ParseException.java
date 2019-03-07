@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.parser;
 
+import lombok.Data;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
@@ -7,6 +8,7 @@ import org.apache.spark.sql.catalyst.trees.TreeNode;
 /**
  * Created by kenya on 2019/1/20.
  */
+@Data
 public class ParseException extends AnalysisException{
     String command;
     TreeNode.Origin start;
@@ -21,6 +23,9 @@ public class ParseException extends AnalysisException{
         this.command = command;
         this.start  = start;
         this.stop = stop;
+    }
+    public ParseException withCommand(String cmd){
+        return new ParseException(cmd, getMessage(), start, stop);
     }
 
 }

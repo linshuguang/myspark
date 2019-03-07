@@ -35,4 +35,32 @@ public abstract class DataType extends AbstractDataType {
         return simpleString();
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(this==o){
+            return true;
+        }
+
+        if(o!=null || o.getClass()==this.getClass()){
+            return true;
+        }
+        return false;
+    }
+
+
+    public boolean equals(Object l, Object r){
+
+        if(l==r){
+            return true;
+        }
+
+        if(l==null && r==null){
+            return true;
+        }
+        if(l!=null){
+            return l.equals(r);
+        }else{
+            return r.equals(l);
+        }
+    }
 }
