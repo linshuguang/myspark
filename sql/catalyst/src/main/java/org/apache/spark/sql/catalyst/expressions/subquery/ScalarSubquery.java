@@ -23,4 +23,9 @@ public class ScalarSubquery extends SubqueryExpression {
     }
 
 
+    @Override
+    public ScalarSubquery clone(){
+        return new ScalarSubquery(getPlan(),getChildren(),getExprId());
+    }
+
 }

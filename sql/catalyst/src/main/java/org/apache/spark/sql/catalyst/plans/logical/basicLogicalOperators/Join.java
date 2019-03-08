@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators;
 
+import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.plans.joinTypes.JoinType;
 import org.apache.spark.sql.catalyst.plans.logical.BinaryNode;
@@ -8,6 +9,7 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 /**
  * Created by kenya on 2019/1/21.
  */
+@Data
 public class Join extends BinaryNode {
     JoinType joinType;
     Expression condition;

@@ -1324,12 +1324,17 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
         return withOrigin(ctx, new Function<SqlBaseParser.StarContext, Expression>() {
             @Override
             public Expression apply(SqlBaseParser.StarContext sctx){
-                return new UnresolvedStar(ParserUtils.map(sctx.qualifiedName().identifier(), new Function<SqlBaseParser.IdentifierContext, String>() {
-                    @Override
-                    public String apply(SqlBaseParser.IdentifierContext c) {
-                        return c.getText();
-                    }
-                }));
+                SqlBaseParser.QualifiedNameContext qualifiedNameContext = sctx.qualifiedName();
+                if(qualifiedNameContext!=null) {
+                    return new UnresolvedStar(ParserUtils.map(qualifiedNameContext.identifier(), new Function<SqlBaseParser.IdentifierContext, String>() {
+                        @Override
+                        public String apply(SqlBaseParser.IdentifierContext c) {
+                            return c.getText();
+                        }
+                    }));
+                }else{
+                    return new UnresolvedStar();
+                }
             }
         });
     }

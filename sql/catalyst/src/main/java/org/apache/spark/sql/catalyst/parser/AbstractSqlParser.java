@@ -7,10 +7,13 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.spark.sql.AnalysisException;
 import static org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
+
+import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.types.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.function.Function;
 import static org.apache.spark.sql.catalyst.parser.ParserDriver.*;
@@ -31,6 +34,12 @@ public abstract class AbstractSqlParser implements ParserInterface{
         return parse(sqlText, (parser) ->{
             return astBuilder.visitSingleDataType(parser.singleDataType());
       });
+    }
+
+    public Expression parseExpression(String sqlText){
+        return parse(sqlText, (parser) -> {
+            return astBuilder.visitSingleExpression(parser.singleExpression());
+        });
     }
 
     protected <T> T  parse(String command,Function<SqlBaseParser,T>toResult) {

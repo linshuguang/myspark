@@ -13,4 +13,7 @@ public class UnresolvedStar  extends Star{
     public UnresolvedStar( List<String> target){
         this.target = target;
     }
+    public UnresolvedStar( ){
+        this.target = null;
+    }
 }

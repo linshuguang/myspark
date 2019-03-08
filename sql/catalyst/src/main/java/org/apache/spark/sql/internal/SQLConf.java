@@ -215,4 +215,5 @@ public class SQLConf implements Serializable {
     public boolean setOpsPrecedenceEnforced(){
         return getConf(LEGACY_SETOPS_PRECEDENCE_ENABLED);
     }
+
 }

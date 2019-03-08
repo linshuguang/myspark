@@ -1,8 +1,11 @@
 package org.apache.spark.sql.catalyst.plans.logical;
 
+import lombok.Data;
+
 /**
  * Created by kenya on 2019/1/21.
  */
+@Data
 public class BinaryNode extends LogicalPlan {
     LogicalPlan left;
     LogicalPlan right;

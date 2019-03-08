@@ -1,13 +1,19 @@
 package org.apache.spark.sql.catalyst.trees;
 
 import javafx.util.Pair;
-import org.apache.spark.sql.catalyst.expressions.predicates.In;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.spark.lang.MurmurHash3;
+import org.apache.spark.lang.PartialFunction;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.apache.spark.sql.catalyst.errors.Errors.*;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
+
 
 /**
  * Created by kenya on 2019/1/18.
@@ -17,6 +23,13 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
     protected List<BaseType> children = new ArrayList<BaseType>();
 
     //Set<BaseType> containsChild =
+    Origin origin = CurrentOrigin.get();
+
+    protected List<Object> otherCopyArgs = new ArrayList<>();
+
+    public Origin origin(){
+        return CurrentOrigin.get();
+    }
 
     private Set<TreeNode>containsChild;
 
@@ -86,21 +99,54 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
             value.set(new Origin(line, start));
         }
 
+        public static <A>  A withOrigin(Origin o,Function<Void,A>f){
+            set(o);
+            A ret = null;
+            try{
+                ret = f.apply((Void) null);
+            } finally {
+                reset();
+            }
+            return ret;
+        }
+
     }
 
-    public BaseType transformDown(Function<BaseType, BaseType> rule){
-//        val afterRule = CurrentOrigin.withOrigin(origin) {
-//            rule.applyOrElse(this, identity[BaseType])
-//        }
-//
-//        // Check if unchanged and then possibly return old copy to avoid gc churn.
-//        if (this fastEquals afterRule) {
-//            mapChildren(_.transformDown(rule))
-//        } else {
-//            afterRule.mapChildren(_.transformDown(rule))
-//        }
-        return null;
+
+
+
+
+
+    public BaseType transformDown(PartialFunction<BaseType, BaseType> rule){
+
+        BaseType afterRule = CurrentOrigin.withOrigin(origin(),(b)->{
+            if(rule!=null && rule.isDefinedAt((BaseType)this)){
+                return rule.apply((BaseType) this);
+            }else{
+                return (BaseType) this;
+            }
+        });
+
+        if (this == afterRule) {
+            return mapChildren((c)->c.transformDown(rule));
+        } else {
+            return afterRule.mapChildren((c)->c.transformDown(rule));
+        }
     }
+
+    public BaseType transform(PartialFunction<BaseType, BaseType>rule){
+        BaseType afterRule = CurrentOrigin.withOrigin(origin,(c)->{
+            return rule.applyOrElse((BaseType) this, (q)->{return q;});
+        });
+
+        // Check if unchanged and then possibly return old copy to avoid gc churn.
+        if (fastEquals(afterRule)) {
+            return mapChildren((p)->{return p.transformDown(rule);});
+        } else {
+            return afterRule.mapChildren((p)->{return p.transformDown(rule);});
+        }
+    }
+
 
     public BaseType transformUp(Function<BaseType, BaseType> rule){
 
@@ -175,4 +221,97 @@ public class TreeNode<BaseType extends TreeNode<BaseType>> {
         }
         return null;
     }
+
+    public void foreachUp(Function<BaseType,Void>f){
+        for(BaseType child:children){
+            f.apply(child);
+        }
+        f.apply((BaseType) this);
+    }
+
+    @Override
+    public int hashCode(){
+        //TODO make lazy
+        return MurmurHash3.productHash(this);
+    }
+
+    protected <B> List<B> mapProductIterator(Function<Object,B> f){
+
+        Field[] fields =this.getClass().getDeclaredFields();
+        List<B> arr = new ArrayList<>();
+        for(int i=0; i<fields.length;i++) {
+            try {
+                boolean origin = fields[i].isAccessible();
+                fields[i].setAccessible(true);
+                arr.add(f.apply(fields[i].get(this)));
+                fields[i].setAccessible(origin);
+            }catch (IllegalAccessException e){
+                continue;
+            }
+        }
+        return arr;
+    }
+
+
+
+
+    public BaseType makeCopy(List<Object>newArgs){
+
+        List<Object> _newArgs = newArgs;
+        return attachTree(this, "makeCopy",(q)->{
+            Stream<Constructor> stream = Arrays.stream(getClass().getConstructors());
+            Constructor[] ctors = (Constructor[])stream.filter(line->line.getParameterTypes().length!=0).toArray();
+
+            if(ctors.length==0){
+                //TODO:sys.err
+            }
+
+            List<Object>allArgs = new ArrayList<>();
+            allArgs.addAll(_newArgs);
+            if (otherCopyArgs.size()>0) {
+                allArgs.addAll(otherCopyArgs);
+            }
+
+            boolean found = false;
+            Constructor defaultCtor=null;
+            for(Constructor ctor:ctors){
+                if(ctor.getParameterTypes().length==allArgs.size() && !allArgs.contains(null)){
+                    List<Class> argsArray = ParserUtils.map(allArgs,(c)->{ return c.getClass();});
+                    Class[] classes = new Class[argsArray.size()];
+                    found = ClassUtils.isAssignable(classes,ctor.getParameterTypes(),true);
+                    if(found){
+                        defaultCtor = ctor;
+                        break;
+                    }
+                }
+            }
+            if(!found){
+                int max = 0;
+                for(Constructor ctor:ctors){
+                    if(ctor.getParameterTypes().length>max){
+                        max = ctor.getParameterTypes().length;
+                        defaultCtor = ctor;
+                    }
+                }
+            }
+
+            Constructor defaultCtor2 = defaultCtor;
+            try {
+                return CurrentOrigin.withOrigin(origin,(c)->{
+                    try {
+                        return (BaseType) defaultCtor2.newInstance(allArgs.toArray());
+                    }catch (Exception e){
+                        throw new IllegalArgumentException();
+                    }
+
+                });
+            } catch(IllegalArgumentException e) {
+
+            }catch (Exception e){
+
+            }
+            return null;
+        });
+    }
+
 }

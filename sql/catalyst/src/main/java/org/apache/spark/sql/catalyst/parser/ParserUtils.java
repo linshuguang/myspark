@@ -232,11 +232,26 @@ public class ParserUtils {
 
     ){
         List<T> tList = new ArrayList<>();
-      for(C ctx: ctxs){
-          tList.add(f.apply(ctx));
-      }
-      return tList;
+        for(C ctx: ctxs){
+            tList.add(f.apply(ctx));
+        }
+        return tList;
     }
+
+
+    public static <A, B > List<A> sortBy(
+            List<A> ctxs,
+            Function<A,B>f
+
+    ){
+        Map<B,A> map = new TreeMap<>();
+        for(A ctx: ctxs){
+            map.put(f.apply(ctx),ctx);
+        }
+        return new ArrayList<>(map.values());
+    }
+
+
 
 
 

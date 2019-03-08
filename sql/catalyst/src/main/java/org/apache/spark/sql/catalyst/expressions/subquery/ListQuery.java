@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.expressions.subquery;
 
+import lombok.experimental.NonFinal;
 import org.apache.spark.sql.catalyst.expressions.Attribute;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.ExprId;
@@ -24,6 +25,11 @@ public class ListQuery extends SubqueryExpression {
     }
     public ListQuery(LogicalPlan plan){
         this(plan,new ArrayList<>(), NamedExpression.newExprId(),new ArrayList<>());
+    }
+
+    @Override
+    public ListQuery clone(){
+        return new ListQuery(getPlan(),getChildren(),getExprId(), childOutputs);
     }
 
 }

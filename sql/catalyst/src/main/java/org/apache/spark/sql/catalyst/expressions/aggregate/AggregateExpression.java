@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.expressions.aggregate;
 
+import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.ExprId;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpression;
@@ -7,6 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpressio
 /**
  * Created by kenya on 2019/2/22.
  */
+@Data
 public class AggregateExpression extends Expression {
     AggregateFunction aggregateFunction;
     AggregateMode mode;
@@ -28,4 +30,10 @@ public class AggregateExpression extends Expression {
                                boolean isDistinct){
         this(aggregateFunction,mode, isDistinct, NamedExpression.newExprId());
     }
+
+    @Override
+    public AggregateExpression clone(){
+        return new AggregateExpression(aggregateFunction, mode, isDistinct, resultId);
+    }
+
 }

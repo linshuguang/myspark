@@ -28,4 +28,8 @@ public class Exists extends SubqueryExpression {
         this(plan,NamedExpression.newExprId());
     }
 
+    @Override
+    public Exists clone(){
+        return new Exists(plan,children,exprId);
+    }
 }
