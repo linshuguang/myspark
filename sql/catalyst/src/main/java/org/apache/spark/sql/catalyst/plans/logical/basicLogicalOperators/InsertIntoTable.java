@@ -2,6 +2,8 @@ package org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators;
 
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +26,12 @@ public class InsertIntoTable extends LogicalPlan {
         this.query = query;
         this.overwrite = overwrite;
         this.ifPartitionNotExists = ifPartitionNotExists;
+    }
+
+    @Override
+    protected List<LogicalPlan> children(){
+        LogicalPlan[] logicalPlans= new LogicalPlan[]{query};
+        return Arrays.asList(logicalPlans);
     }
 
 }

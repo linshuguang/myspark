@@ -13,4 +13,9 @@ public class Rollup extends GroupingSet {
     public Rollup(List<Expression>groupByExprs){
         this.groupByExprs = groupByExprs;
     }
+
+    @Override
+    List<Expression> groupByExprs(){
+        return groupByExprs;
+    }
 }

@@ -20,7 +20,26 @@ import org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
 /**
  * Created by kenya on 2019/1/18.
  */
-public class ParserUtils {
+public  class ParserUtils {
+
+
+    public static class MutableObject <T> {
+         T[] wrapper;
+        public MutableObject(T t){
+            wrapper = (T[]) new Object[1];
+            wrapper[0] = t;
+        }
+
+        public void set(T t){
+            wrapper[0] = t;
+        }
+
+        public T get(){
+            return wrapper[0];
+        }
+
+    }
+
 
     public static boolean NonFatal(Throwable t){
         if(t instanceof VirtualMachineError

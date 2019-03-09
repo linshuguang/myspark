@@ -15,18 +15,17 @@ public class Sample extends UnaryNode {
     Double upperBound;
     boolean withReplacement;
     Long seed;
-    LogicalPlan child;
 
     public Sample( Double lowerBound,
             Double upperBound,
             boolean withReplacement,
             Long seed,
             LogicalPlan child){
+        super(child);
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.withReplacement = withReplacement;
         this.seed = seed;
-        this.child = child;
 
         Double eps = RandomSampler.roundingEpsilon;
         Double fraction = upperBound - lowerBound;
@@ -44,7 +43,7 @@ public class Sample extends UnaryNode {
     @Override
     public Sample clone(){
         //TODO:deep copy check on child
-        return new Sample(lowerBound,upperBound,withReplacement,seed,child);
+        return new Sample(lowerBound,upperBound,withReplacement,seed,getChild());
     }
 
 }

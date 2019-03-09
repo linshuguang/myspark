@@ -16,4 +16,9 @@ public class UnresolvedGenerator extends Generator {
         this.children = children;
     }
 
+    @Override
+    protected List<Expression> children(){
+        return children;
+    }
+
 }

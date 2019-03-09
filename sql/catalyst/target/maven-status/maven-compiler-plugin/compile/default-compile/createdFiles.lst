@@ -153,6 +153,7 @@ org\apache\spark\sql\catalyst\plans\logical\SubqueryAlias.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$61.class
 org\apache\spark\unsafe\types\CalendarInterval.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ResourceContext.class
+org\apache\spark\sql\catalyst\rules\RuleExecutor.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$56.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$StarContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$ShowTablesContext.class
@@ -192,6 +193,7 @@ org\apache\spark\sql\catalyst\parser\AstBuilder$15.class
 org\apache\spark\sql\catalyst\plans\logical\ScriptTransformation.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$75.class
 org\apache\spark\sql\types\HiveStringTypes\HiveStringType.class
+org\apache\spark\sql\catalyst\analysis\SimpleAnalyzer.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DescribeFunctionContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$QueryTermContext.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$BooleanExpressionContext.class
@@ -355,6 +357,7 @@ org\apache\spark\sql\internal\SQLConf$1.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$AnalyzeContext.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$19$1.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$21.class
+org\apache\spark\sql\catalyst\analysis\Analyzer.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$52.class
 org\apache\spark\sql\catalyst\catalog\InMemoryCatalog.class
 org\apache\spark\sql\catalyst\expressions\aggregate\DeclarativeAggregate.class
@@ -610,6 +613,7 @@ org\apache\spark\sql\catalyst\parser\ParserInterface.class
 org\apache\spark\unsafe\hash\Murmur3_x86_32.class
 org\apache\spark\util\EventLoop$1.class
 org\apache\spark\shuffle\ShuffleManager.class
+org\apache\spark\sql\catalyst\expressions\higherOrderFunctions\NamedLambdaVariable.class
 org\apache\spark\sql\catalyst\expressions\Ascending.class
 org\apache\spark\sql\catalyst\parser\SqlBaseLexer.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DescribeTableContext.class

@@ -15,18 +15,17 @@ public class Pivot extends UnaryNode {
     Expression pivotColumn;
     List<Expression> pivotValues;
     List<Expression> aggregates;
-    LogicalPlan child;
 
     public Pivot(List<NamedExpression>groupByExprsOpt,
                  Expression pivotColumn,
                  List<Expression> pivotValues,
                  List<Expression> aggregates,
                  LogicalPlan child){
+        super(child);
         this.groupByExprsOpt = groupByExprsOpt;
         this.pivotColumn = pivotColumn;
         this.pivotValues = pivotValues;
         this.aggregates = aggregates;
-        this.child = child;
     }
 
 }

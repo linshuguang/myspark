@@ -20,6 +20,7 @@
 *.rar
 *.sql
 sql/catalyst/target
+sql/catalyst/target/*
 sql/catalyst/src/test/sources/sql-tests/*
 .idea/*.xml
 .idea

@@ -11,7 +11,7 @@ import java.util.List;
  * Created by kenya on 2019/2/22.
  */
 @Data
-public class SubqueryExpression extends  PlanExpression<LogicalPlan> {
+public abstract class SubqueryExpression extends  PlanExpression<LogicalPlan> {
     LogicalPlan plan;
     List<Expression> children;
     ExprId exprId;
@@ -23,6 +23,11 @@ public class SubqueryExpression extends  PlanExpression<LogicalPlan> {
         this.plan = plan;
         this.children = children;
         this.exprId = exprId;
+    }
+
+    @Override
+    protected List<Expression> children() {
+        return children;
     }
 
 }

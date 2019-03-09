@@ -42,5 +42,10 @@ public class CreateNamedStruct extends  CreateNamedStructLike {
         }
     }
 
+    @Override
+    protected List<Expression>children(){
+        return children;
+    }
+
 
 }

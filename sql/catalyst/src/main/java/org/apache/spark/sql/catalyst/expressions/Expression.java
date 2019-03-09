@@ -25,7 +25,7 @@ public abstract class Expression extends TreeNode<Expression> {
     }
 
     public boolean childrenResolved(){
-        for(Expression expression: this.children){
+        for(Expression expression: children()){
             if(!expression.resolved()){
                 return false;
             }
@@ -39,5 +39,7 @@ public abstract class Expression extends TreeNode<Expression> {
     }
 
 
+    //TODO:
+    //protected abstract ExprCode doGenCode(ctx: CodegenContext, ev: ExprCode);
 
 }

@@ -11,11 +11,10 @@ import java.util.Map;
  */
 public class WithWindowDefinition extends UnaryNode {
     Map<String ,WindowSpecDefinition>windowDefinitions;
-    LogicalPlan child;
 
     public WithWindowDefinition(Map<String ,WindowSpecDefinition>windowDefinitions, LogicalPlan child){
+        super(child);
         this.windowDefinitions = windowDefinitions;
-        this.child = child;
     }
 
 }

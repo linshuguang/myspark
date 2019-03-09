@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class Union extends LogicalPlan {
 
-    List<LogicalPlan>children;
+    private List<LogicalPlan>children;
     public Union(List<LogicalPlan>children){
         this.children = children;
     }
@@ -19,4 +19,9 @@ public class Union extends LogicalPlan {
         children.add(left);
         children.add(right);
     }
+    @Override
+    protected List<LogicalPlan>children(){
+        return this.children;
+    }
+
 }

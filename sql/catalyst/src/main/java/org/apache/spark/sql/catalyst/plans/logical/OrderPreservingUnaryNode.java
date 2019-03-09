@@ -5,4 +5,8 @@ package org.apache.spark.sql.catalyst.plans.logical;
  */
 public abstract class OrderPreservingUnaryNode extends UnaryNode {
 
+    public OrderPreservingUnaryNode(LogicalPlan child){
+        super(child);
+    }
+
 }

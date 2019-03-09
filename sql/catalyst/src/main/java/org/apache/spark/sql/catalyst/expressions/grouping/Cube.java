@@ -14,4 +14,9 @@ public class Cube extends GroupingSet {
     public Cube(List<Expression>groupByExprs){
         this.groupByExprs = groupByExprs;
     }
+
+    @Override
+    List<Expression> groupByExprs(){
+        return groupByExprs;
+    }
 }

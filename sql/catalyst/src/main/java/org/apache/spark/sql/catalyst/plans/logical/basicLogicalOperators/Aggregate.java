@@ -13,14 +13,13 @@ import java.util.List;
 public class Aggregate extends UnaryNode {
     List<Expression>groupingExpressions;
     List<NamedExpression>aggregateExpressions;
-    LogicalPlan child;
 
     public Aggregate(List<Expression>groupingExpressions,
             List<NamedExpression>aggregateExpressions,
             LogicalPlan child){
+        super(child);
         this.groupingExpressions = groupingExpressions;
         this.aggregateExpressions = aggregateExpressions;
-        this.child = child;
     }
 
 }

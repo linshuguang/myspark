@@ -11,11 +11,12 @@ import org.apache.spark.sql.catalyst.plans.logical.OrderPreservingUnaryNode;
 @Data
 public class Filter extends OrderPreservingUnaryNode {
     Expression condition;
-    LogicalPlan child;
 
     public Filter(Expression condition, LogicalPlan child){
+        super(child);
         this.condition = condition;
-        this.child = child;
     }
+
+
 
 }

@@ -3,6 +3,7 @@ package org.apache.spark.sql.catalyst.expressions.windowExpressions;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.SortOrder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,15 @@ public class WindowSpecDefinition extends Expression implements WindowSpec {
         this.partitionSpec = partitionSpec;
         this.orderSpec = orderSpec;
         this.frameSpecification = frameSpecification;
+    }
+
+    @Override
+    protected List<Expression> children(){
+        List<Expression> list = new ArrayList<>();
+        list.addAll(partitionSpec);
+        list.addAll(orderSpec);
+        list.add(frameSpecification);
+        return list;
     }
 
 }

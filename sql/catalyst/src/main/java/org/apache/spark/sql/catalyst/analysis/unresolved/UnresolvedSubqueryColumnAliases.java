@@ -10,11 +10,10 @@ import java.util.List;
  */
 public class UnresolvedSubqueryColumnAliases extends UnaryNode {
     List<String > outputColumnNames;
-    LogicalPlan child;
 
     public UnresolvedSubqueryColumnAliases(List<String > outputColumnNames,
             LogicalPlan child){
+        super(child);
         this.outputColumnNames = outputColumnNames;
-        this.child = child;
     }
 }

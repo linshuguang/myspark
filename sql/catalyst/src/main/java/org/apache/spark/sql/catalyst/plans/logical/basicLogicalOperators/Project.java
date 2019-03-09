@@ -11,9 +11,9 @@ import java.util.List;
  */
 public class Project extends OrderPreservingUnaryNode {
     List<NamedExpression> projectList;
-    LogicalPlan child;
+
     public Project(List<NamedExpression> projectList, LogicalPlan child){
+        super(child);
         this.projectList = projectList;
-        this.child = child;
     }
 }

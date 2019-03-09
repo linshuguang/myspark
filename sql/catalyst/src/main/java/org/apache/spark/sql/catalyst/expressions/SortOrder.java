@@ -6,9 +6,8 @@ import java.util.Set;
 /**
  * Created by kenya on 2019/2/18.
  */
-public class SortOrder {
+public class SortOrder extends UnaryExpression{
 
-    Expression child;
     SortDirection direction;
     NullOrdering nullOrdering;
     Set<Expression> sameOrderExpressions;
@@ -17,7 +16,7 @@ public class SortOrder {
             SortDirection direction,
             NullOrdering nullOrdering,
             Set<Expression> sameOrderExpressions){
-        this.child = child;
+        super(child);
         this.direction = direction;
         this.nullOrdering = nullOrdering;
         this.sameOrderExpressions = sameOrderExpressions;

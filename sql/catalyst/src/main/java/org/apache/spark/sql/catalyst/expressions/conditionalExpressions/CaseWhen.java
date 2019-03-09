@@ -4,6 +4,7 @@ import javafx.util.Pair;
 import org.apache.spark.sql.catalyst.expressions.ComplexTypeMergingExpression;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,5 +18,17 @@ public class CaseWhen extends ComplexTypeMergingExpression {
             Expression elseValue){
         this.branches = branches;
         this.elseValue = elseValue;
+    }
+
+    @Override
+    protected List<Expression> children(){
+        //branches.flatMap(b => b._1 :: b}._2 :: Nil) ++ elseValue
+        List<Expression> list = new ArrayList<>();
+        for(Pair<Expression,Expression>pair:branches){
+            list.add(pair.getKey());
+            list.add(pair.getValue());
+        }
+        list.add(elseValue);
+        return list;
     }
 }

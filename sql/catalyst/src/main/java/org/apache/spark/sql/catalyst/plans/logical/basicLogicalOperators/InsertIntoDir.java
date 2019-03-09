@@ -11,17 +11,16 @@ public class InsertIntoDir extends UnaryNode{
     boolean isLocal;
     CatalogStorageFormat storage;
     String provider;
-    LogicalPlan child;
     boolean overwrite;
     public InsertIntoDir(boolean isLocal,
             CatalogStorageFormat storage,
             String provider,
             LogicalPlan child,
             boolean overwrite){
+        super(child);
         this.isLocal = isLocal;
         this.storage = storage;
         this.provider = provider;
-        this.child = child;
         this.overwrite = overwrite;
     }
     public InsertIntoDir(boolean isLocal,

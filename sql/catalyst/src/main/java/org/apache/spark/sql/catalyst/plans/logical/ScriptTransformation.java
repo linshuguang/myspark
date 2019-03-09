@@ -10,12 +10,11 @@ import java.util.List;
 /**
  * Created by kenya on 2019/2/14.
  */
-public  class  ScriptTransformation extends UnaryNode {
+public class ScriptTransformation extends UnaryNode {
 
     List<Expression> input;
     String script;
     List<? extends Attribute> output;
-    LogicalPlan child;
     ScriptInputOutputSchema ioschema;
 
     public ScriptTransformation(
@@ -24,10 +23,10 @@ public  class  ScriptTransformation extends UnaryNode {
             List<? extends Attribute> output,
             LogicalPlan child,
             ScriptInputOutputSchema ioschema){
+        super(child);
         this.input = input;
         this.script = script;
         this.output = output;
-        this.child = child;
         this.ioschema = ioschema;
     }
 

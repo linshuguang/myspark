@@ -9,12 +9,11 @@ import org.apache.spark.sql.catalyst.plans.logical.OrderPreservingUnaryNode;
  */
 public class GlobalLimit extends OrderPreservingUnaryNode {
     Expression limitExpr;
-    LogicalPlan child;
 
     public GlobalLimit(Expression limitExpr,
             LogicalPlan child){
+        super(child);
         this.limitExpr = limitExpr;
-        this.child  = child;
     }
 
 }

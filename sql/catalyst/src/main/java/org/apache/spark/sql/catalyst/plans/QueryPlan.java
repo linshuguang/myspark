@@ -2,6 +2,7 @@ package org.apache.spark.sql.catalyst.plans;
 
 import org.apache.spark.lang.PartialFunction;
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import static org.apache.spark.sql.catalyst.parser.ParserUtils.MutableObject;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
 import org.apache.spark.sql.types.DataType;
 import sun.reflect.generics.tree.BaseType;
@@ -13,11 +14,18 @@ import java.util.function.Function;
 /**
  * Created by kenya on 2019/1/18.
  */
-public class QueryPlan <PlanType extends QueryPlan<PlanType>> extends TreeNode<PlanType> {
+public abstract class QueryPlan <PlanType extends QueryPlan<PlanType>> extends TreeNode<PlanType> {
 
     public PlanType transformAllExpressions(PartialFunction<Expression, Expression> rule){
-        return (PlanType)transform(
-                new PartialFunction<>((q)-> {return q instanceof QueryPlan;},(q)->{ QueryPlan p = (QueryPlan)q;return (PlanType)p.transformExpressions(rule);}
+        return transform(
+                new PartialFunction<>(
+                        (q)-> {
+                            return q instanceof QueryPlan;
+                            },
+                        (q)->{
+                            QueryPlan p = (QueryPlan)q;
+                            return (PlanType)p.transformExpressions(rule);
+                        }
         ));
     }
 
@@ -31,8 +39,8 @@ public class QueryPlan <PlanType extends QueryPlan<PlanType>> extends TreeNode<P
 
 
     public PlanType mapExpressions( Function<Expression , Expression> f) {
-        boolean changed = false;
 
+        MutableObject<Boolean> changed = new MutableObject<>(false);
         Function<Expression,Expression>transformExpression = new Function<Expression, Expression>() {
             @Override
             public Expression apply(Expression e) {
@@ -40,7 +48,7 @@ public class QueryPlan <PlanType extends QueryPlan<PlanType>> extends TreeNode<P
                 if (newE.fastEquals(e)) {
                     return e;
                 } else {
-                    //changed = true;
+                    changed.set(true);
                     return newE;
                 }
             }
@@ -53,15 +61,16 @@ public class QueryPlan <PlanType extends QueryPlan<PlanType>> extends TreeNode<P
                     return transformExpression.apply((Expression)arg);
                 }else if(arg instanceof Map || arg instanceof DataType){
                     return arg;
+                }else{
+                    return arg;
                 }
-                return null;
             }
         };
 
-        List<Object> newArgs = mapProductIterator(recursiveTransform);
+        Object[] newArgs = mapProductIterator(recursiveTransform);
 
-        changed = true;
-        if (changed) {
+        if (changed.get()) {
+            //TODO: pay attention here in cases
             return makeCopy(newArgs);
         } else {
             return (PlanType)this;

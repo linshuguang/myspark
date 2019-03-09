@@ -12,13 +12,12 @@ import java.util.List;
 public class Sort extends UnaryNode{
     List<SortOrder>order;
     boolean global;
-    LogicalPlan child;
 
     public Sort(List<SortOrder>order,
             boolean global,
             LogicalPlan child){
+        super(child);
         this.order = order;
         this.global = global;
-        this.child = child;
     }
 }

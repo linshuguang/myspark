@@ -13,16 +13,15 @@ import java.util.List;
 public class GroupingSets extends UnaryNode {
     List<List<Expression>>selectedGroupByExprs;
     List<Expression>groupByExprs;
-    LogicalPlan child;
     List<NamedExpression>aggregations;
 
     public GroupingSets(List<List<Expression>>selectedGroupByExprs,
             List<Expression>groupByExprs,
             LogicalPlan child,
             List<NamedExpression>aggregations){
+        super(child);
         this.selectedGroupByExprs = selectedGroupByExprs;
         this.groupByExprs = groupByExprs;
-        this.child = child;
         this.aggregations = aggregations;
     }
 }

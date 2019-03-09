@@ -11,13 +11,13 @@ import java.util.List;
 public class UnresolvedHint extends UnaryNode {
     String name;
     List<Object>  parameters;
-    LogicalPlan child;
+
     public UnresolvedHint(String name,
             List<Object>  parameters,
             LogicalPlan child){
+        super(child);
         this.name = name;
         this.parameters = parameters;
-        this.child = child;
     }
 
 }

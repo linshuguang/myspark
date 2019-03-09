@@ -5,7 +5,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression;
 /**
  * Created by kenya on 2019/2/22.
  */
-public class AggregateFunction extends Expression {
+public abstract class AggregateFunction extends Expression {
     public AggregateExpression toAggregateExpression(){
         return toAggregateExpression(false);
     }

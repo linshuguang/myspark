@@ -13,11 +13,10 @@ import java.util.List;
  * Created by kenya on 2019/1/20.
  */
 public class With extends UnaryNode {
-    LogicalPlan child;
     List<Pair<String, SubqueryAlias>> cteRelations;
 
     public With(LogicalPlan child, List<Pair<String, SubqueryAlias>> cteRelations){
-        this.child = child;
+        super(child);
         this.cteRelations = cteRelations;
     }
 

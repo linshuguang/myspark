@@ -2,8 +2,15 @@ package org.apache.spark.sql.catalyst.expressions.windowExpressions;
 
 import org.apache.spark.sql.catalyst.expressions.Expression;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by kenya on 2019/2/22.
  */
-public class SpecialFrameBoundary extends Expression {
+public abstract class SpecialFrameBoundary extends Expression {
+    @Override
+    protected List<Expression>children(){
+        return new ArrayList<>();
+    }
 }

@@ -25,4 +25,9 @@ public class UnresolvedFunction extends Expression {
                               boolean isDistinct){
         this(new FunctionIdentifier(name, null),children, isDistinct);
     }
+
+    @Override
+    protected List<Expression> children(){
+        return children;
+    }
 }

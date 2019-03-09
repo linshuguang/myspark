@@ -7,15 +7,14 @@ import org.apache.spark.sql.catalyst.identifiers.AliasIdentifier;
  */
 public class SubqueryAlias extends OrderPreservingUnaryNode{
     AliasIdentifier name;
-    LogicalPlan child;
 
     public SubqueryAlias(String identifier, LogicalPlan child){
         this(new AliasIdentifier(identifier), child);
     }
 
     public SubqueryAlias(AliasIdentifier name, LogicalPlan child){
+        super(child);
         this.name = name;
-        this.child = child;
     }
 
     public String alias(){

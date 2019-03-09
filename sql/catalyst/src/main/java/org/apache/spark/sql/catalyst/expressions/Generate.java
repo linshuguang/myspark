@@ -14,7 +14,6 @@ public class Generate extends UnaryNode{
     boolean outer;
     String qualifier;
     List<Attribute> generatorOutput;
-    LogicalPlan child;
 
     public Generate(Generator generator,
                      List<Integer>unrequiredChildIndex,
@@ -22,12 +21,12 @@ public class Generate extends UnaryNode{
                      String qualifier,
                      List<Attribute> generatorOutput,
                      LogicalPlan child){
+        super(child);
         this.generator = generator;
         this.unrequiredChildIndex = unrequiredChildIndex;
         this.outer = outer;
         this.qualifier = qualifier;
         this.generatorOutput = generatorOutput;
-        this.child = child;
 
     }
 }
