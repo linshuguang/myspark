@@ -56,7 +56,6 @@ public class PlanTest extends SparkFunSuite {
         }
 
 
-        LogicalPlan p1 = normalizeExprIds(plan1);
         LogicalPlan normalized1 = normalizePlan(normalizeExprIds(plan1));
         LogicalPlan normalized2 = normalizePlan(normalizeExprIds(plan2));
         if (!ParserUtils.equals(normalized1, normalized2)) {
@@ -81,15 +80,24 @@ public class PlanTest extends SparkFunSuite {
                         (p) -> {
                             if (p instanceof Filter) {
                                 Filter filter = (Filter) p;
-                                return new Filter(new And(ParserUtils.sortBy(splitConjunctivePredicates(filter.getCondition()), (q) -> {
-                                    return q.hashCode();
-                                })), filter.getChild());
+                                List<Expression>  expressions = ParserUtils.map(splitConjunctivePredicates(filter.getCondition()),(q)->{return rewriteEqual(q);});
+
+                                Expression expression = null;
+                                if(expressions.size()==1){
+                                    expression = expressions.get(0);
+                                }else {
+                                    expression = new And(ParserUtils.sortBy(expressions, (q) -> {
+                                        return q.hashCode();
+                                    }));
+                                }
+                                return new Filter(expression , filter.getChild());
                             } else if (p instanceof Sample) {
                                 Sample sample = (Sample) p;
                                 Sample sample1 = sample.clone();
                                 sample1.setSeed(0L);
                                 return sample1;
                             } else if (p instanceof Join) {
+                                //TODO: alert here laterly
                                 Join join = (Join) p;
                                 if (join.getCondition() != null) {
                                     And newCondition = new And(ParserUtils.sortBy(ParserUtils.map(splitConjunctivePredicates(join.getCondition()), (q) -> {
