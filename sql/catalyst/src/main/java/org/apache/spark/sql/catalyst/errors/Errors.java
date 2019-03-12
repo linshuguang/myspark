@@ -42,6 +42,8 @@ public class Errors {
 //                case NonFatal(e) if !e.isInstanceOf[SparkException] =>
 //                    throw new TreeNodeException(tree, msg, e)
             }
+            e.printStackTrace();
+
 
         }
         return null;

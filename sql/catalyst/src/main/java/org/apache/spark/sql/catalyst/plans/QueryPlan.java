@@ -67,7 +67,7 @@ public abstract class QueryPlan <PlanType extends QueryPlan<PlanType>> extends T
             }
         };
 
-        Object[] newArgs = mapProductIterator(recursiveTransform);
+        List<Object> newArgs = mapProductIterator(recursiveTransform);
 
         if (changed.get()) {
             //TODO: pay attention here in cases

@@ -44,30 +44,35 @@ public class SQLConf implements Serializable {
 
 
     public static ConfigEntry<Boolean> LEGACY_HAVING_WITHOUT_GROUP_BY_AS_WHERE = buildConf("spark.sql.legacy.parser.havingWithoutGroupByAsWhere")
-      .internal()
-      .doc("If it is set to true, the parser will treat HAVING without GROUP BY as a normal WHERE, which does not follow SQL standard.")
-      .booleanConf().createWithDefault(false);
+        .internal()
+        .doc("If it is set to true, the parser will treat HAVING without GROUP BY as a normal WHERE, which does not follow SQL standard.")
+        .booleanConf().createWithDefault(false);
 
     public static ConfigEntry<Integer> OPTIMIZER_MAX_ITERATIONS = buildConf("spark.sql.optimizer.maxIterations")
-    .internal()
-    .doc("The max number of iterations the optimizer and analyzer runs.")
-    .intConf().createWithDefault(100);
+        .internal()
+        .doc("The max number of iterations the optimizer and analyzer runs.")
+        .intConf().createWithDefault(100);
 
-    public static ConfigEntry<Boolean> LEGACY_SETOPS_PRECEDENCE_ENABLED =
-    buildConf("spark.sql.legacy.setopsPrecedence.enabled")
-      .internal()
-      .doc("When set to true and the order of evaluation is not specified by parentheses, the " +
+    public static ConfigEntry<Boolean> LEGACY_SETOPS_PRECEDENCE_ENABLED = buildConf("spark.sql.legacy.setopsPrecedence.enabled")
+        .internal()
+        .doc("When set to true and the order of evaluation is not specified by parentheses, the " +
                    "set operations are performed from left to right as they appear in the query. When set " +
                    "to false and order of evaluation is not specified by parentheses, INTERSECT operations " +
                    "are performed before any UNION, EXCEPT and MINUS operations.")
-      .booleanConf()
-              .createWithDefault(false);
+        .booleanConf()
+        .createWithDefault(false);
 
     public static ConfigEntry<Boolean> CASE_SENSITIVE = buildConf("spark.sql.caseSensitive")
-    .internal()
-    .doc("Whether the query analyzer should be case sensitive or not. " +
+        .internal()
+        .doc("Whether the query analyzer should be case sensitive or not. " +
                  "Default to case insensitive. It is highly discouraged to turn on case sensitive mode.")
-    .booleanConf()
+        .booleanConf()
+        .createWithDefault(false);
+
+    public static  ConfigEntry<Boolean> SUPPORT_QUOTED_REGEX_COLUMN_NAME = buildConf("spark.sql.parser.quotedRegexColumnNames")
+            .doc("When true, quoted Identifiers (using backticks) in SELECT statement are interpreted" +
+                    " as regular expressions.")
+            .booleanConf()
             .createWithDefault(false);
 
 
@@ -216,4 +221,7 @@ public class SQLConf implements Serializable {
         return getConf(LEGACY_SETOPS_PRECEDENCE_ENABLED);
     }
 
+    public boolean supportQuotedRegexColumnName(){
+        return getConf(SUPPORT_QUOTED_REGEX_COLUMN_NAME);
+    }
 }

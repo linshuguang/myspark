@@ -35,7 +35,7 @@ public abstract class Expression extends TreeNode<Expression> {
 
     @Override
     public boolean equals(Object o){
-        return ParserUtils.equals(this,o);
+        throw new RuntimeException("implement your equals");
     }
 
 

@@ -8,10 +8,12 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
@@ -22,6 +24,8 @@ import org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
  */
 public  class ParserUtils {
 
+
+    public static Pattern escapedIdentifier =  Pattern.compile("`(.+)`");
 
     public static class MutableObject <T> {
          T[] wrapper;
@@ -394,15 +398,38 @@ public  class ParserUtils {
         if(l==r){
             return true;
         }
-
         if(l==null && r==null){
             return true;
         }
-        if(l!=null){
-            return l.equals(r);
-        }else{
-            return r.equals(l);
+        if((l==null && r!=null) || (l!=null && r==null)){
+            return false;
         }
+
+        if(l.getClass()!=r.getClass()){
+            return false;
+        }
+
+        return l.equals(r);
     }
+
+    public static boolean equals(List<String>nameParts1,List<String>nameParts2){
+        if(nameParts1==null && nameParts2==null){
+            return true;
+        }
+        if((nameParts1!=null && nameParts2==null)||(nameParts1==null && nameParts2!=null)){
+            return false;
+        }
+
+        if(nameParts1.size()!=nameParts2.size()){
+            return false;
+        }
+        for(int i=0;i<nameParts1.size();i++){
+            if(!StringUtils.equals(nameParts1.get(i),nameParts2.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+
 
 }

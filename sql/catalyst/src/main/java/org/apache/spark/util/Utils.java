@@ -4,7 +4,10 @@ import org.apache.spark.network.util.JavaUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Created by kenya on 2019/2/26.
@@ -58,4 +61,22 @@ public class Utils {
     public static boolean isTesting(){
         return System.getenv().containsKey("SPARK_TESTING") || System.getProperties().containsKey("spark.testing");
     }
+
+
+    public static void traverseUp(Object orig, Function<Class,Boolean> f){
+        if(orig==null){
+            return;
+        }
+        Object o = orig;
+        Class c = o.getClass();
+        while (c != Object.class){
+            if(!f.apply(c)){
+                break;
+            }
+            c = c.getSuperclass();
+        }
+    }
+
+
+
 }

@@ -62,6 +62,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+
 import org.apache.spark.sql.catalyst.expressions.complexTypeCreator.CreateStruct;
 import org.apache.spark.sql.types.HiveStringTypes.CharType;
 import org.apache.spark.sql.types.HiveStringTypes.VarcharType;
@@ -115,8 +117,8 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     public Expression visitSingleExpression(SqlBaseParser.SingleExpressionContext ctx){
         return withOrigin(ctx, new Function<SqlBaseParser.SingleExpressionContext, Expression>() {
                     @Override
-                    public Expression apply(SqlBaseParser.SingleExpressionContext singleExpressionContext) {
-                        return (Expression)visitNamedExpression(ctx.namedExpression());
+                    public Expression apply(SqlBaseParser.SingleExpressionContext sctx) {
+                        return (Expression)visitNamedExpression(sctx.namedExpression());
                     }
                 });
     }
@@ -1347,7 +1349,6 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             public Expression apply(SqlBaseParser.NamedExpressionContext nctx){
                 Expression e = expression(nctx.expression());
                 if (nctx.identifier() != null) {
-                    //TODO:
                     return new Alias(e, nctx.identifier().getText());
                 } else if (nctx.identifierList() != null) {
                     return new MultiAlias(e, visitIdentifierList(nctx.identifierList()));
@@ -1740,12 +1741,13 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             public Expression apply(SqlBaseParser.FunctionCallContext fctx) {
 
                 String  name = fctx.qualifiedName().getText();
-                boolean isDistinct = fctx.setQuantifier().DISTINCT()!=null;
+                boolean isDistinct = fctx.setQuantifier() !=null && fctx.setQuantifier().DISTINCT()!=null;
 
                 //List<Expression>
                 List<Expression> arguments = ParserUtils.map(fctx.argument, new Function<SqlBaseParser.ExpressionContext, Expression>() {
                             @Override
                             public Expression apply(SqlBaseParser.ExpressionContext ectx){
+
                                 return expression(ectx);
                             }
                         });
@@ -1753,10 +1755,11 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                 if(arguments.size()==1 && arguments.get(0) instanceof UnresolvedStar){
                     UnresolvedStar unresolvedStar = (UnresolvedStar)arguments.get(0);
                     if(unresolvedStar.getTarget()==null){
-                        arguments = ParserUtils.Seq(Literal.build(new Integer(1)));
+                        if(name.toLowerCase(Locale.ROOT)== "count" && !isDistinct) {
+                            arguments = ParserUtils.Seq(Literal.build(new Integer(1)));
+                        }
                     }
                 }
-
 
                 FunctionIdentifier funcId = replaceFunctions(visitFunctionName(fctx.qualifiedName()), fctx);
                 UnresolvedFunction function = new UnresolvedFunction(funcId, arguments, isDistinct);
@@ -2009,6 +2012,24 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             public Expression apply(SqlBaseParser.DereferenceContext dctx) {
                 String attr = dctx.fieldName.getText();
                 Expression e = expression(dctx.base);
+                if(e instanceof UnresolvedAttribute){
+                    UnresolvedAttribute unresolved_attr = (UnresolvedAttribute)e;
+                    Matcher m = escapedIdentifier.matcher(dctx.fieldName.getStart().getText());
+                    if(m.find()){
+                        String columnNameRegex = m.group(0);
+                        if(conf.supportQuotedRegexColumnName() && canApplyRegex(dctx)) {
+                            return new UnresolvedRegex(columnNameRegex, unresolved_attr.name(),conf.caseSensitiveAnalysis());
+                        }
+                    }else{
+                        List<String> attrs = new ArrayList<>();
+                        attrs.addAll(unresolved_attr.getNameParts());
+                        attrs.add(attr);
+                        return new UnresolvedAttribute(attrs);
+                    }
+
+                }else{
+                    return new UnresolvedExtractValue(e, Literal.build(attr));
+                }
 
 //                match {
 //                    case unresolved_attr @ UnresolvedAttribute(nameParts) =>
@@ -2029,22 +2050,22 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     }
 
     @Override
-    public Expression visitColumnReference(SqlBaseParser.ColumnReferenceContext ctx){
+    public Expression visitColumnReference(SqlBaseParser.ColumnReferenceContext ctx) {
         return withOrigin(ctx, new Function<SqlBaseParser.ColumnReferenceContext, Expression>() {
             @Override
-            public Expression apply(SqlBaseParser.ColumnReferenceContext columnReferenceContext) {
-//                ctx.getStart.getText match {
-//                    case escapedIdentifier(columnNameRegex)
-//                        if conf.supportQuotedRegexColumnName && canApplyRegex(ctx) =>
-//                        UnresolvedRegex(columnNameRegex, None, conf.caseSensitiveAnalysis)
-//                    case _ =>
-//                        UnresolvedAttribute.quoted(ctx.getText)
-//                }
-                return null;
+            public Expression apply(SqlBaseParser.ColumnReferenceContext cctx) {
+
+                String text = cctx.getStart().getText();
+                Matcher m = escapedIdentifier.matcher(text);
+                if (m.find()) {
+                    String columnNameRegex = m.group(0);
+                    if (conf.supportQuotedRegexColumnName() && canApplyRegex(cctx)) {
+                        return new UnresolvedRegex(columnNameRegex, null, conf.caseSensitiveAnalysis());
+                    }
+                }
+                return UnresolvedAttribute.quoted(cctx.getText());
             }
         });
-
-
     }
 
 

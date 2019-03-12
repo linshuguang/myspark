@@ -8,9 +8,9 @@ import java.util.function.Function;
 public  class PartialFunction<A,B> {
 
     Function<A,B> f;
-    Function<A,Boolean>isDefinedAt;
+    Function<Object,Boolean>isDefinedAt;
 
-    public PartialFunction(Function<A,Boolean>isDefinedAt,Function<A,B>f){
+    public PartialFunction(Function<Object,Boolean>isDefinedAt,Function<A,B>f){
         this.isDefinedAt = isDefinedAt;
         this.f = f;
     }
@@ -19,15 +19,15 @@ public  class PartialFunction<A,B> {
         return f.apply(x);
     }
 
-    public B applyOrElse(A x,Function<A,B>def){
+    public B applyOrElse(Object x,Function<Object,B>def){
         if(!isDefinedAt(x)){
             return def.apply(x);
         }else{
-            return f.apply(x);
+            return f.apply((A)x);
         }
     }
 
-    public boolean isDefinedAt(A x){
+    public boolean isDefinedAt(Object x){
         return isDefinedAt.apply(x);
     }
 

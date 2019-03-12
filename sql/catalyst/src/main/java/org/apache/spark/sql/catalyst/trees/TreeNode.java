@@ -6,11 +6,13 @@ import org.apache.spark.lang.MurmurHash3;
 import org.apache.spark.lang.PartialFunction;
 import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.types.DataType;
+import org.apache.spark.util.Utils;
 import org.codehaus.jackson.map.Serializers;
 
 import static org.apache.spark.sql.catalyst.parser.ParserUtils.MutableObject;
 import static org.apache.spark.sql.catalyst.errors.Errors.*;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -123,7 +125,7 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
     public BaseType transformDown(PartialFunction<BaseType, BaseType> rule){
 
         BaseType afterRule = CurrentOrigin.withOrigin(origin,(c)->{
-            return rule.applyOrElse((BaseType) this, (q)->{return q;});
+            return rule.applyOrElse((BaseType) this, (q)->{return (BaseType)q;});
         });
 
         // Check if unchanged and then possibly return old copy to avoid gc churn.
@@ -215,7 +217,7 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
                 }
             };
 
-            Object[] newArgs = mapProductIterator(
+            List<Object> newArgs = mapProductIterator(
                     new Function<Object, Object>() {
                         @Override
                         public Object apply(Object arg) {
@@ -284,39 +286,69 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
         return MurmurHash3.productHash(this);
     }
 
-    //iterate over this object, and transform any fields, e.g. condition/children
-    protected <B> B[] mapProductIterator(Function<Object,B> f){
 
-        Field[] fields =this.getClass().getDeclaredFields();
+    private List<Field> traverseFields(){
+        List<Field> fieldList = new ArrayList<>();
+        Class tClass = TreeNode.class;
+        Utils.traverseUp(this,(c)->{
+
+            if(!tClass.isAssignableFrom(c)){
+                return false;
+            }else if(c==tClass){
+                return false;
+            }
+            fieldList.addAll(Arrays.asList(c.getDeclaredFields()));
+            return true;
+        });
+
+        return fieldList;
+    }
+
+
+    //iterate over this object, and transform any fields, e.g. condition/children
+    protected <B> List<B> mapProductIterator(Function<Object,B> f){
+
+
+
+        List<Field> fields = traverseFields();
+        int length = fields==null?0:fields.size();
         List<B> arr = new ArrayList<>();
-        for(int i=0; i<fields.length;i++) {
+        for(int i=0; i<length;i++) {
             try {
-                boolean origin = fields[i].isAccessible();
-                fields[i].setAccessible(true);
-                arr.add(f.apply(fields[i].get(this)));
-                fields[i].setAccessible(origin);
+                boolean origin = fields.get(i).isAccessible();
+                fields.get(i).setAccessible(true);
+                arr.add(f.apply(fields.get(i).get(this)));
+                fields.get(i).setAccessible(origin);
             }catch (IllegalAccessException e){
+                e.printStackTrace();
                 continue;
             }
         }
-        return (B[])arr.toArray();
+        return arr;
     }
 
 
 
 
-    public BaseType makeCopy(Object[] newArgs){
+    public BaseType makeCopy(List<Object> newArgs){
 
-        Object[] _newArgs = newArgs;
         return attachTree(this, "makeCopy",(q)->{
-            Stream<Constructor> stream = Arrays.stream(getClass().getConstructors());
-            Constructor[] ctors = (Constructor[])stream.filter(line->line.getParameterTypes().length!=0).toArray();
-
-            if(ctors.length==0){
-                //TODO:sys.err
+            List<Constructor> ctor_array = new ArrayList<>();
+            Constructor<?>[] constructors = getClass().getConstructors();
+            for(Constructor constructor: constructors){
+                if(constructor.getParameterTypes().length!=0){
+                    ctor_array.add(constructor);
+                }
             }
 
-            List<Object>allArgs = Arrays.asList(_newArgs);
+
+            if(ctor_array.size()==0){
+                //TODO:sys.err
+            }
+            Constructor<?>[] ctors = new Constructor<?>[ctor_array.size()];
+            ctors = ctor_array.toArray(ctors);
+
+            List<Object>allArgs = newArgs;
             if (otherCopyArgs.size()>0) {
                 allArgs.addAll(otherCopyArgs);
             }
@@ -355,9 +387,9 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
 
                 });
             } catch(IllegalArgumentException e) {
-
+                e.printStackTrace();
             }catch (Exception e){
-
+                e.printStackTrace();
             }
             return null;
         });

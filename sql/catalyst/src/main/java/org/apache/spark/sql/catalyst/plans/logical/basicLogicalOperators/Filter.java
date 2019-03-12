@@ -2,6 +2,7 @@ package org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators;
 
 import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.plans.logical.OrderPreservingUnaryNode;
 
@@ -17,6 +18,17 @@ public class Filter extends OrderPreservingUnaryNode {
         this.condition = condition;
     }
 
+
+    @Override
+    public boolean equals(Object o){
+
+        if(o instanceof Filter){
+            Filter filter = (Filter)o;
+            return ParserUtils.equals(condition,filter.condition);
+        }
+        return false;
+
+    }
 
 
 }
