@@ -543,6 +543,7 @@ org\apache\spark\sql\catalyst\parser\SqlBaseParser$ComplexColTypeListContext.cla
 org\apache\spark\sql\catalyst\plans\joinTypes\FullOuter.class
 org\apache\spark\sql\catalyst\parser\AstBuilder$42.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$CtesContext.class
+org\apache\spark\lang\DslPlaceHolder.class
 org\apache\spark\sql\catalyst\dsl\DSLParser$TinyIntLiteralContext.class
 org\apache\spark\sql\types\ArrayType.class
 org\apache\spark\sql\catalyst\parser\SqlBaseParser$DoubleLiteralContext.class

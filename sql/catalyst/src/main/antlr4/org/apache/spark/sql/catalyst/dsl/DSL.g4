@@ -93,8 +93,7 @@ attr returns [UnresolvedAttribute value]
 
 identifier
     : strictIdentifier
-    | ANTI | FULL | INNER | LEFT | SEMI | RIGHT | NATURAL | JOIN | CROSS | ON
-    | UNION | INTERSECT | EXCEPT | SETMINUS
+    | PLACEHOLDER
     ;
 
 strictIdentifier

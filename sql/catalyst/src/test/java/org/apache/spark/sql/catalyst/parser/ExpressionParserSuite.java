@@ -1,9 +1,12 @@
 package org.apache.spark.sql.catalyst.parser;
 
 import org.apache.spark.lang.Symbol;
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute;
 import org.apache.spark.sql.catalyst.analysis.unresolved.MultiAlias;
+import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedFunction;
 import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedStar;
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.expressions.namedExpressions.Alias;
 import org.apache.spark.sql.catalyst.plans.PlanTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,15 +92,15 @@ public class ExpressionParserSuite extends PlanTest {
 
         // Multi-Alias
         //assertEqual("a as (b, c)", new MultiAlias((Expression)dslDriver.expression("'a"), Arrays.asList("b", "c")));
-        //assertEqual("a() (b, c)", new MultiAlias((Expression)dslDriver.expression("'a.function()"), Arrays.asList("b", "c")));
+ //       assertEqual("a() (b, c)", new MultiAlias(new UnresolvedFunction( "a",new ArrayList<>(),false),Arrays.asList("b", "c")));
 //
                         // Numeric literals without a space between the literal qualifier and the alias, should not be
                         // interpreted as such. An unresolved reference should be returned instead.
                         // TODO add the JIRA-ticket number.
-                        assertEqual("1SL", dslDriver.implicit(new Symbol("1SL")));
+                        assertEqual("1SL", new UnresolvedAttribute("1SL"));
 //
 //                        // Aliased star is allowed.
-                        //assertEqual("a.* b", UnresolvedStar(Option(Seq("a"))) as 'b)
+                        assertEqual("a.* b", new Alias(new UnresolvedStar(Arrays.asList("a")),"b"));
                 System.out.println("ok");
 
     }
