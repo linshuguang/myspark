@@ -11,4 +11,22 @@ public class BinaryComparison extends BinaryOperator {
         super(left, right);
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof BinaryComparison) {
+            if (o == null) {
+                return false;
+            }
+            if (o == this) {
+                return true;
+            }
+
+            if (!(this.getClass() == o.getClass())) {
+                return false;
+            }
+            return super.equals(o);
+        }
+        return false;
+    }
+
 }

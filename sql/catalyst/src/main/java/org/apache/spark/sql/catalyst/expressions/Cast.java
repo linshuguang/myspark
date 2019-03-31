@@ -1,5 +1,7 @@
 package org.apache.spark.sql.catalyst.expressions;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.types.DataType;
 
 /**
@@ -19,6 +21,15 @@ public class Cast extends UnaryExpression{
         this.timeZoneId = timeZoneId;
     }
 
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Cast){
+            Cast c = (Cast)o;
+            return ParserUtils.equals(dataType,c.dataType) && StringUtils.equals(timeZoneId,c.timeZoneId);
+        }
+        return false;
+    }
 
 
 }

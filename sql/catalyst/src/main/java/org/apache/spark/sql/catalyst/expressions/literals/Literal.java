@@ -4,6 +4,7 @@ import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.LeafExpression;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.catalyst.util.DateTimeUtils;
 import org.apache.spark.sql.catalyst.util.MapData;
@@ -55,6 +56,8 @@ public class Literal extends LeafExpression{
             return v instanceof Byte;
         }else if(dataType instanceof ShortType) {
             return v instanceof Short;
+        }else if(dataType instanceof DecimalType) {
+            return v instanceof BigDecimal;
         }else if(dataType instanceof IntegerType || dataType instanceof DateType){
             return v instanceof Integer;
         }else if(dataType instanceof LongType || dataType instanceof TimestampType) {
@@ -63,8 +66,6 @@ public class Literal extends LeafExpression{
             return v instanceof Float;
         }else if(dataType instanceof DoubleType) {
             return v instanceof Double;
-        }else if(dataType instanceof DecimalType) {
-            return v instanceof Decimal;
         }else if( dataType instanceof CalendarIntervalType) {
             return v instanceof CalendarInterval;
         }else if(dataType instanceof BinaryType) {
@@ -193,6 +194,16 @@ public class Literal extends LeafExpression{
         }else{
             throw new AnalysisException("Unsupported component type $clz in arrays");
         }
+    }
+
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Literal) {
+            Literal l =  (Literal)o;
+            return ParserUtils.equals(value,l.value) && ParserUtils.equals(dataType,l.dataType);
+        }
+        return false;
     }
 
 }

@@ -1,6 +1,7 @@
 package org.apache.spark.sql.catalyst.plans.logical;
 
 import lombok.Data;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import sun.rmi.runtime.Log;
 
 import java.util.ArrayList;
@@ -22,6 +23,16 @@ public abstract class UnaryNode extends LogicalPlan {
         List<LogicalPlan>c= new ArrayList<>();
         c.add(child);
         return c;
+    }
+
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof UnaryNode){
+            UnaryNode u = (UnaryNode)o;
+            return ParserUtils.equals(child,u.child);
+        }
+        return false;
     }
 
 

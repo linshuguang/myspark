@@ -1,6 +1,9 @@
 package org.apache.spark.sql.catalyst.identifiers;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.xml.soap.SAAJResult;
 
 /**
  * Created by kenya on 2019/1/19.
@@ -49,6 +52,17 @@ public abstract class IdentifierWithDatabase {
         }else {
             return identifier;
         }
+    }
+
+
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof IdentifierWithDatabase){
+            IdentifierWithDatabase t = (IdentifierWithDatabase)o;
+            return StringUtils.equals(identifier,t.identifier) && StringUtils.equals(database,t.database);
+        }
+        return false;
     }
 
 }

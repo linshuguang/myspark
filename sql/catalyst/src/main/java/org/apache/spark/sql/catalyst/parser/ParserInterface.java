@@ -13,4 +13,5 @@ public interface ParserInterface {
     //LogicalPlan parsePlan(String sqlText);
     DataType parseDataType(String sqlText);
     Expression parseExpression(String sqlText);
+    LogicalPlan parsePlan(String sqlText);
 }

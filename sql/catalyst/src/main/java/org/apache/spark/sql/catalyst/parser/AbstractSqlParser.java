@@ -9,6 +9,7 @@ import org.apache.spark.sql.AnalysisException;
 import static org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
 
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.types.DataType;
 import org.slf4j.Logger;
@@ -83,5 +84,18 @@ public abstract class AbstractSqlParser implements ParserInterface{
             Origin position = new Origin(e.getLine(), e.getStartPosition());
             throw new ParseException(command, e.getMessage(), position, position);
         }
+    }
+
+
+    @Override
+    public LogicalPlan parsePlan(String sqlText){
+        return parse(sqlText, (parser) -> {
+            LogicalPlan plan = astBuilder.visitSingleStatement(parser.singleStatement());
+            if (plan != null) {
+                return plan;
+            }
+            Origin position = new Origin(null, null);
+            throw new ParseException(sqlText, "Unsupported SQL statement", position, position);
+        });
     }
 }

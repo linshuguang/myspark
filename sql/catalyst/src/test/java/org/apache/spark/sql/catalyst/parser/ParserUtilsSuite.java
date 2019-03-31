@@ -23,7 +23,7 @@ import static org.apache.spark.sql.catalyst.parser.ParserDriver.*;
  * Created by kenya on 2019/3/1.
  */
 @SuppressWarnings("ALL")
-@RunWith(JUnit4ClassRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {"classpath:applicationContext-test.xml"})
 public class ParserUtilsSuite extends SparkFunSuite {
 

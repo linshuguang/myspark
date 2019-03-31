@@ -1,6 +1,7 @@
 package org.apache.spark.sql.catalyst.plans.logical;
 
 import lombok.Data;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,15 @@ public abstract class BinaryNode extends LogicalPlan {
     protected final List<LogicalPlan> children(){
         LogicalPlan[] logicalPlans = new LogicalPlan[]{left,right};
         return Arrays.asList(logicalPlans);
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof BinaryNode){
+            BinaryNode b = (BinaryNode)o;
+            return ParserUtils.equals(left,b.left) && ParserUtils.equals(right,b.right);
+        }
+        return false;
     }
 
 

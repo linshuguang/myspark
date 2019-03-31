@@ -11,4 +11,12 @@ public class Intersect extends SetOperation{
         super(left, right);
         this.isAll = isAll;
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Intersect){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

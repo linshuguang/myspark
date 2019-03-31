@@ -16,7 +16,7 @@ import java.util.List;
  * Created by kenya on 2019/1/30.
  */
 @Data
-public class Alias extends UnaryExpression {
+public class Alias extends NamedExpression {
     String name;
     ExprId exprId;//:  = NamedExpression.newExprId,
     List<String> qualifier;//: Seq[String] = Seq.empty,

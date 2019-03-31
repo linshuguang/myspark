@@ -9,4 +9,5 @@ public class Divide extends BinaryArithmetic {
     public Divide(Expression left, Expression right) {
         super(left, right);
     }
+
 }

@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators;
 
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 
 import java.util.ArrayList;
@@ -22,6 +23,15 @@ public class Union extends LogicalPlan {
     @Override
     protected List<LogicalPlan>children(){
         return this.children;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Union){
+            Union u = (Union)o;
+            return ParserUtils.equalList(children,u.children);
+        }
+        return false;
     }
 
 }

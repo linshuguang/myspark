@@ -14,7 +14,7 @@ public class UnresolvedStar  extends Star{
         this.target = target;
     }
     public UnresolvedStar( ){
-        this.target = null;
+        this(null);
     }
 
 }

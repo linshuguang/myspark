@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -57,6 +58,25 @@ public  class ParserUtils {
     }
     public static boolean isValidInt(BigDecimal bd) {
         return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
+    }
+
+    public static <T>String mkString(List<T>list,String l,String d,String r){
+        StringBuilder sbuf = new StringBuilder();
+        sbuf.append(l);
+        for(int i=0;i<list.size();i++){
+            sbuf.append(list.get(i).toString());
+            if(i<list.size()-1){
+                sbuf.append(d);
+            }
+        }
+        sbuf.append(r);
+        return sbuf.toString();
+    }
+
+
+    public static String stringWithoutUnescape(TerminalNode node){
+        // STRING parser rule forces that the input always has quotes at the starting and ending.
+        return node.getText().substring(1, node.getText().length() - 1);
     }
 
     public static <T, R extends ParserRuleContext> T withOrigin(R ctx, Function<R, T>f){
@@ -249,6 +269,15 @@ public  class ParserUtils {
         return tList;
     }
 
+    //optionalMap
+    public static <C>  LogicalPlan optionalMap(C ctx, BiFunction<C, LogicalPlan,LogicalPlan>f, LogicalPlan plan){
+        if (ctx != null) {
+            return f.apply(ctx, plan);
+        } else {
+            return plan;
+        }
+    }
+
     public static <C, T > List<T> map(
             List<C> ctxs,
             Function<C,T>f
@@ -393,6 +422,28 @@ public  class ParserUtils {
         }
     }
 
+
+
+
+    public static <T>boolean equalList(List<T> l, List<T> r){
+        boolean b1 = l==null|| l.size()==0;
+        boolean b2 = r==null|| r.size()==0;
+        if(b1 && b2){
+            return true;
+        }
+        if((b1&&!b2)||(!b1&&b2)){
+            return false;
+        }
+        if(l.size()!=r.size()){
+            return false;
+        }
+        for(int i=0;i<l.size();i++){
+            if(!equals(l.get(i),r.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
     public static boolean equals(Object l, Object r){
 
         if(l==r){
@@ -405,8 +456,15 @@ public  class ParserUtils {
             return false;
         }
 
-        if(l.getClass()!=r.getClass()){
-            return false;
+        if(!(l instanceof List && r instanceof List)) {
+            if (l.getClass() != r.getClass()) {
+                return false;
+            }
+        }
+
+
+        if(l instanceof List){
+            return equalList((List)l,(List)r);
         }
 
         return l.equals(r);

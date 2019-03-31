@@ -10,4 +10,11 @@ public class UnaryMinus extends UnaryExpression {
     public UnaryMinus(Expression child){
         super(child);
     }
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof UnaryMinus){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

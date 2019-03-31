@@ -9,4 +9,6 @@ public class LessThan extends BinaryComparison {
     public LessThan(Expression left, Expression right){
         super(left, right);
     }
+
+
 }

@@ -11,4 +11,12 @@ public class Except extends SetOperation {
         super(left, right);
         this.isAll = isAll;
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Except){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

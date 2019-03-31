@@ -23,7 +23,7 @@ public class ExprId {
     public boolean equals(Object o){
         if(o instanceof ExprId){
             ExprId e = (ExprId)o;
-            return this.id == e.id && this.jvmId==e.jvmId;
+            return this.jvmId==e.jvmId;
         }
         return false;
     }
