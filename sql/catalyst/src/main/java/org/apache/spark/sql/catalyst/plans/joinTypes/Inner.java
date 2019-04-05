@@ -10,6 +10,13 @@ public class Inner extends InnerLike {
         this.sql = "INNER";
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Inner){
+            return super.equals(o);
+        }
+        return false;
+    }
 
 
 }

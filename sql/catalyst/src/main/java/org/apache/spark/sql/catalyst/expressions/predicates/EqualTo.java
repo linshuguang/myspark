@@ -16,4 +16,13 @@ public class EqualTo extends BinaryComparison {
     public EqualTo(List<Expression> expressionList ){
         super(expressionList.get(0), expressionList.get(1));
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof EqualTo){
+            return super.equals(o);
+        }
+        return false;
+    }
+
 }

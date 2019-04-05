@@ -57,4 +57,13 @@ public class JoinType {
         }
 
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof JoinType){
+            JoinType jt = (JoinType)o;
+            return StringUtils.equals(sql,jt.sql);
+        }
+        return false;
+    }
 }

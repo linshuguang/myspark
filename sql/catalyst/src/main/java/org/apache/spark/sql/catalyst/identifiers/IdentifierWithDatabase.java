@@ -4,12 +4,13 @@ import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.soap.SAAJResult;
+import java.io.Serializable;
 
 /**
  * Created by kenya on 2019/1/19.
  */
 @Data
-public abstract class IdentifierWithDatabase {
+public abstract class IdentifierWithDatabase implements Serializable{
     String identifier;
     String database;
 

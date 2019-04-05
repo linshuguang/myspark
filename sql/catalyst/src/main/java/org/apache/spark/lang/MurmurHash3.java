@@ -1,5 +1,7 @@
 package org.apache.spark.lang;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
@@ -79,7 +81,7 @@ public class MurmurHash3 {
             byte[] yourBytes = bos.toByteArray();
             return hash32(yourBytes);
         }catch (Exception e){
-
+            System.err.print(ExceptionUtils.getStackTrace(e));
         }finally {
             try {
                 bos.close();

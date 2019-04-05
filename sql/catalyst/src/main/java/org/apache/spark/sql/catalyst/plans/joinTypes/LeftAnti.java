@@ -9,4 +9,12 @@ public class LeftAnti extends JoinType {
         this.sql = "LEFT ANTI";
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof LeftAnti){
+            return super.equals(o);
+        }
+        return false;
+    }
+
 }

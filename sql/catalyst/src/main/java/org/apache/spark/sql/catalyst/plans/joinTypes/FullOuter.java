@@ -9,4 +9,12 @@ public class FullOuter extends JoinType {
         this.sql = "FULL OUTER";
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof FullOuter){
+            return super.equals(o);
+        }
+        return false;
+    }
+
 }

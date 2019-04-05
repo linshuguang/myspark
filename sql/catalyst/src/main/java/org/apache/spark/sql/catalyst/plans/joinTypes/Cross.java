@@ -9,4 +9,12 @@ public class Cross extends InnerLike {
         this.explicitCartesian = true;
         this.sql = "CROSS";
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Cross){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

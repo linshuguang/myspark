@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.Serializers;
 import static org.apache.spark.sql.catalyst.parser.ParserUtils.MutableObject;
 import static org.apache.spark.sql.catalyst.errors.Errors.*;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
 /**
  * Created by kenya on 2019/1/18.
  */
-public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
+public abstract class TreeNode<BaseType extends TreeNode<BaseType>> implements Serializable {
     BaseType self;
 
     abstract  protected List<BaseType> children();
@@ -42,7 +43,7 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> {
         return new HashSet<>(children());
     }
 
-    public static class Origin{
+    public static class Origin implements Serializable{
         Integer line;
         Integer startPosition;
 

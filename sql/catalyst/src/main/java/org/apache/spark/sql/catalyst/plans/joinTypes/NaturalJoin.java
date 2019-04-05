@@ -1,5 +1,9 @@
 package org.apache.spark.sql.catalyst.plans.joinTypes;
 
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
+
+import javax.print.attribute.standard.MediaSize;
+
 /**
  * Created by kenya on 2019/1/22.
  */
@@ -13,5 +17,17 @@ public class NaturalJoin extends JoinType {
         this.sql = "NATURAL " + tpe.sql;
     }
 
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof NaturalJoin){
+            NaturalJoin nj = (NaturalJoin)o;
+            if(!ParserUtils.equals(tpe,nj.tpe)){
+                return false;
+            }
+            return super.equals(o);
+        }
+        return false;
+    }
 
 }

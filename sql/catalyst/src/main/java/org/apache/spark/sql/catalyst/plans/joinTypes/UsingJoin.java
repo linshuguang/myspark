@@ -1,5 +1,7 @@
 package org.apache.spark.sql.catalyst.plans.joinTypes;
 
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
+
 import java.util.List;
 
 /**
@@ -15,4 +17,15 @@ public class UsingJoin extends JoinType {
         this.usingColumns = usingColumns;
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof UsingJoin){
+            UsingJoin nj = (UsingJoin)o;
+            if(!ParserUtils.equals(tpe,nj.tpe)){
+                return false;
+            }
+            return super.equals(o);
+        }
+        return false;
+    }
 }

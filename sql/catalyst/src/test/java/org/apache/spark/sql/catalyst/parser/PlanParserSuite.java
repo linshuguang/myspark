@@ -14,6 +14,7 @@ import org.apache.spark.sql.catalyst.expressions.grouping.Cube;
 import org.apache.spark.sql.catalyst.expressions.grouping.Rollup;
 import org.apache.spark.sql.catalyst.expressions.literals.Literal;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpression;
+import org.apache.spark.sql.catalyst.expressions.predicates.EqualTo;
 import org.apache.spark.sql.catalyst.expressions.predicates.LessThan;
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.RowFrame;
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.SpecifiedWindowFrame;
@@ -21,6 +22,7 @@ import org.apache.spark.sql.catalyst.expressions.windowExpressions.UnspecifiedFr
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.WindowSpecDefinition;
 import org.apache.spark.sql.catalyst.identifiers.FunctionIdentifier;
 import org.apache.spark.sql.catalyst.identifiers.TableIdentifier;
+import org.apache.spark.sql.catalyst.plans.joinTypes.*;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias;
 import org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators.*;
@@ -36,6 +38,7 @@ import org.apache.spark.sql.catalyst.expressions.namedExpressions.Alias;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -120,6 +123,43 @@ public class PlanParserSuite extends AnalysisTest {
         return new Sort(Arrays.asList(sortExprs), true,logicalPlan);
     }
 
+    private LogicalPlan generate(LogicalPlan logicalPlan,Generator generator){
+        return generate(logicalPlan, generator, new ArrayList<>(),false,null,new ArrayList<>());
+    }
+    private LogicalPlan generate(
+            LogicalPlan logicalPlan,
+            Generator generator,
+            List<Integer>unrequiredChildIndex,
+            boolean outer,
+            String alias,
+            List<String >outputNames){
+
+        List<Attribute> attributes = new ArrayList<>();
+        for(String name: outputNames){
+            attributes.add(new UnresolvedAttribute(name));
+        }
+        return new Generate(generator, unrequiredChildIndex, outer,
+                alias, attributes, logicalPlan);
+    }
+    private LogicalPlan as(LogicalPlan logicalPlan, String alias){
+        return new SubqueryAlias(alias, logicalPlan);
+    }
+
+    private LogicalPlan join(
+            LogicalPlan logicalPlan,
+            LogicalPlan otherPlan
+            ){
+        return join(logicalPlan,otherPlan, new Inner(),null);
+    }
+
+    private LogicalPlan join(
+            LogicalPlan logicalPlan,
+            LogicalPlan otherPlan,
+            JoinType joinType,
+            Expression condition){
+        return new Join(logicalPlan, otherPlan, joinType, condition);
+    }
+
     private LogicalPlan table(String ref) {
         return new UnresolvedRelation(new TableIdentifier(ref));
     }
@@ -130,6 +170,15 @@ public class PlanParserSuite extends AnalysisTest {
             return new UnresolvedStar(Arrays.asList(names));
         }
     }
+
+//    private LogicalPlan insertInto(LogicalPlan logicalPlan, String tableName, boolean overwrite) {
+//
+//
+//        return new InsertIntoTable(
+//                new UnresolvedRelation(new TableIdentifier(tableName)),
+//                new HashMap<>(), logicalPlan, overwrite, false);
+//    }
+
     private LogicalPlan select(LogicalPlan logicalPlan, Expression...exprs){
         List<NamedExpression> namedExpressions = new ArrayList<>();
         for(Expression expr:exprs){
@@ -450,6 +499,176 @@ public class PlanParserSuite extends AnalysisTest {
     }
 
 
+
+
+
+    @Test
+    public void testLateralView() {
+        UnresolvedGenerator explode = new UnresolvedGenerator(new FunctionIdentifier("explode"), Arrays.asList(new UnresolvedAttribute("x")));
+        UnresolvedGenerator jsonTuple = new UnresolvedGenerator(new FunctionIdentifier("json_tuple"), Arrays.asList(new UnresolvedAttribute("x"), new UnresolvedAttribute("y")));
+
+        // Single lateral view
+        assertEqual(
+                "select * from t lateral view explode(x) expl as x",
+                select(generate(table("t"), explode, new ArrayList<>(), false, "expl", Arrays.asList("x")), star()));
+
+        // Multiple lateral views
+        assertEqual(
+                "select * from t lateral view explode(x) expl lateral view outer json_tuple(x, y) jtup q, z",
+                select(generate(generate(table("t"), explode, new ArrayList<>(), false, "expl", new ArrayList<>())
+                        , jsonTuple, new ArrayList<>(), true, "jtup", Arrays.asList("q", "z")), star()));
+
+
+        // Multi-Insert lateral views.
+        LogicalPlan from = generate(table("t1"), explode, new ArrayList<>(), false, "expl", Arrays.asList("x"));
+        assertEqual(
+                "from t1 lateral view explode(x) expl as x insert into t2 select * lateral view json_tuple(x, y) jtup q, z insert into t3 select * where s < 10",
+
+                new Union(
+                        insertInto(select(generate(from, jsonTuple, new ArrayList<>(), false, "jtup", Arrays.asList("q", "z")), star()), "t2"),
+                        insertInto(select(where(from, new LessThan(new UnresolvedAttribute("s"), Literal.build(new Integer(10)))), star()), "t3"))
+        );
+
+        // Unresolved generator.
+        LogicalPlan expected = select(generate(
+                table("t"),
+                new UnresolvedGenerator(new FunctionIdentifier("posexplode"), Arrays.asList(new UnresolvedAttribute("x"))),
+                new ArrayList<>(),
+                false,
+                "posexpl",
+                Arrays.asList("x")),star());
+
+        assertEqual(
+                "select * from t lateral view posexplode(x) posexpl as x, y",
+                expected);
+
+        intercept(
+                "select * from t lateral view explode(x) expl pivot (   sum(x)   FOR y IN ('a', 'b') )",
+
+                "LATERAL cannot be used together with PIVOT in FROM clause");
+    }
+
+
+
+    private void testUnconditionalJoin(String sql, JoinType jt) {
+        assertEqual(
+                "select * from t as tt " + sql + " u",
+                select(join(as(table("t"), "tt"), table("u"), jt, null), star()));
+    }
+    private void testConditionalJoin(String sql, JoinType jt){
+        assertEqual(
+                "select * from t "+sql+" u as uu on a = b",
+                select(join(table("t"),as(table("u"),"uu"), jt, new EqualTo(new UnresolvedAttribute("a"),new UnresolvedAttribute("b"))),star()));
+    }
+    private void testNaturalJoin(String sql, JoinType jt){
+        assertEqual(
+                "select * from t tt natural "+sql+" u as uu",
+                select(join(as(table("t"),"tt"),as(table("u"),"uu"), new NaturalJoin(jt), null),star()));
+    }
+    private void testUsingJoin(String sql,JoinType jt) {
+        assertEqual(
+                "select * from t " + sql + " u using(a, b)",
+                select(join(table("t"), table("u"), new UsingJoin(jt, Arrays.asList("a", "b")), null), star()));
+    }
+
+    private void test(String sql, JoinType jt, List<BiFunction<String,JoinType,Void>> tests){
+        for(BiFunction<String,JoinType,Void> test:tests){
+            test.apply(sql,jt);
+        }
+    }
+
+
+
+    @Test
+    public void testJoins() {
+
+
+        List<BiFunction<String,JoinType,Void>> testAll =
+                Arrays.asList(
+                        (s,j)->{testUnconditionalJoin(s,j);return (Void)null;},
+                        (s,j)->{testConditionalJoin(s,j);return (Void)null;},
+                        (s,j)->{testNaturalJoin(s,j);return (Void)null;},
+                        (s,j)->{testUsingJoin(s,j);return (Void)null;}
+                        );
+        List<BiFunction<String,JoinType,Void>> testExistence =
+                Arrays.asList(
+                        (s,j)->{testUnconditionalJoin(s,j);return (Void)null;},
+                        (s,j)->{testConditionalJoin(s,j);return (Void)null;},
+                        (s,j)->{testUsingJoin(s,j);return (Void)null;}
+                );
+
+
+        test("cross join", new Cross(),
+                Arrays.asList(
+                    (s,j)->{testUnconditionalJoin(s,j);return (Void)null;}
+                    )
+        );
+        test(",", new Inner(),
+                Arrays.asList(
+                        (s,j)->{testUnconditionalJoin(s,j);return (Void)null;}
+                )
+        );
+        test("join", new Inner(), testAll);
+        test("inner join", new Inner(), testAll);
+        test("left join", new LeftOuter(), testAll);
+        test("left outer join", new LeftOuter(), testAll);
+        test("right join", new RightOuter(), testAll);
+        test("right outer join", new RightOuter(), testAll);
+        test("full join", new FullOuter(), testAll);
+        test("full outer join", new FullOuter(), testAll);
+        test("left semi join", new LeftSemi(), testExistence);
+        test("left anti join",new  LeftAnti(), testExistence);
+        test("anti join", new LeftAnti(), testExistence);
+
+//        // Test natural cross join
+//        intercept("select * from a natural cross join b")
+//
+//        // Test natural join with a condition
+//        intercept("select * from a natural join b on a.id = b.id")
+//
+//        // Test multiple consecutive joins
+//        assertEqual(
+//                "select * from a join b join c right join d",
+//                table("a").join(table("b")).join(table("c")).join(table("d"), RightOuter).select(star()))
+//
+//        // SPARK-17296
+//        assertEqual(
+//                "select * from t1 cross join t2 join t3 on t3.id = t1.id join t4 on t4.id = t1.id",
+//                table("t1")
+//                        .join(table("t2"), Cross)
+//                        .join(table("t3"), Inner, Option(Symbol("t3.id") === Symbol("t1.id")))
+//                        .join(table("t4"), Inner, Option(Symbol("t4.id") === Symbol("t1.id")))
+//                        .select(star()))
+//
+//        // Test multiple on clauses.
+//        intercept("select * from t1 inner join t2 inner join t3 on col3 = col2 on col3 = col1")
+//
+//        // Parenthesis
+//        assertEqual(
+//                "select * from t1 inner join (t2 inner join t3 on col3 = col2) on col3 = col1",
+//                table("t1")
+//                        .join(table("t2")
+//                                .join(table("t3"), Inner, Option('col3 === 'col2)), Inner, Option('col3 === 'col1))
+//                        .select(star()))
+//        assertEqual(
+//                "select * from t1 inner join (t2 inner join t3) on col3 = col2",
+//                table("t1")
+//                        .join(table("t2").join(table("t3"), Inner, None), Inner, Option('col3 === 'col2))
+//                        .select(star()))
+//        assertEqual(
+//                "select * from t1 inner join (t2 inner join t3 on col3 = col2)",
+//                table("t1")
+//                        .join(table("t2").join(table("t3"), Inner, Option('col3 === 'col2)), Inner, None)
+//                        .select(star()))
+//
+//        // Implicit joins.
+//        assertEqual(
+//                "select * from t1, t3 join t2 on t1.col1 = t2.col2",
+//                table("t1")
+//                        .join(table("t3"))
+//                        .join(table("t2"), Inner, Option(Symbol("t1.col1") === Symbol("t2.col2")))
+//                        .select(star()))
+    }
 
 
 

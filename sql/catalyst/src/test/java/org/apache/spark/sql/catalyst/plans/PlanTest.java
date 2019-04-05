@@ -97,14 +97,20 @@ public class PlanTest extends SparkFunSuite {
                                 sample1.setSeed(0L);
                                 return sample1;
                             } else if (p instanceof Join) {
-                                //TODO: alert here laterly
+                                //TODO: alert here laterly ; done
                                 Join join = (Join) p;
                                 if (join.getCondition() != null) {
-                                    And newCondition = new And(ParserUtils.sortBy(ParserUtils.map(splitConjunctivePredicates(join.getCondition()), (q) -> {
-                                        return rewriteEqual(q);
-                                    }), (c) -> {
-                                        return c.hashCode();
-                                    }));
+                                    Expression newCondition =null;
+                                    List<Expression> expressions = splitConjunctivePredicates(join.getCondition());
+                                    if(expressions.size()==1){
+                                        newCondition = expressions.get(0);
+                                    }else {
+                                        newCondition = new And(ParserUtils.sortBy(ParserUtils.map(splitConjunctivePredicates(join.getCondition()), (q) -> {
+                                            return rewriteEqual(q);
+                                        }), (c) -> {
+                                            return c.hashCode();
+                                        }));
+                                    }
                                     return new Join(join.getLeft(), join.getRight(), join.getJoinType(), newCondition);
                                 }
                             }
@@ -182,7 +188,8 @@ public class PlanTest extends SparkFunSuite {
     private Expression rewriteEqual(Expression condition){
         if(condition instanceof EqualTo){
             EqualTo eq = (EqualTo)condition;
-            return new EqualTo(ParserUtils.sortBy(new ArrayList<>(Arrays.asList(eq.getLeft(), eq.getRight())),(q)->{return q.hashCode();}));
+            List<Expression> expressions = ParserUtils.sortBy(Arrays.asList(eq.getLeft(), eq.getRight()),(q)->{return q.hashCode();});
+            return new EqualTo(expressions.get(0),expressions.get(1));
 
         }else if(condition instanceof EqualNullSafe){
 
