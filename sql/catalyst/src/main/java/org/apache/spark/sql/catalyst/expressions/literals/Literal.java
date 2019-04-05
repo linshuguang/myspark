@@ -26,6 +26,8 @@ public class Literal extends LeafExpression{
     DataType dataType;
 
 
+
+
     public static Literal TrueLiteral(){
         return new Literal(true, new BooleanType());
     }
@@ -38,6 +40,7 @@ public class Literal extends LeafExpression{
         validateLiteralValue(value, dataType);
         this.value = value;
         this.dataType = dataType;
+        this.setFoldable(true);
     }
 
     private void validateLiteralValue(Object value, DataType dataType){

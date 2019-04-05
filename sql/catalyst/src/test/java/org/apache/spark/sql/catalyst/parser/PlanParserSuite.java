@@ -438,19 +438,19 @@ public class PlanParserSuite extends AnalysisTest {
                 sql +  " window w1 as (partition by a, b order by c rows between 1 preceding and 1 following), w2 as w1, w3 as w1"
                 ,
         new WithWindowDefinition(ws1, plan));
-//
-//        // Fail with no reference.
-//        intercept(s"$sql window w2 as w1", "Cannot resolve window reference 'w1'")
-//
-//        // Fail when resolved reference is not a window spec.
-//        intercept(
-//                s"""$sql
-//                        |window w1 as (partition by a, b order by c rows between 1 preceding and 1 following),
-//                |       w2 as w1,
-//         |       w3 as w2""".stripMargin,
-//        "Window reference 'w2' is not a window specification"
-//    )
+
+        // Fail with no reference.
+        intercept(sql+" window w2 as w1", "Cannot resolve window reference 'w1'");
+
+        // Fail when resolved reference is not a window spec.
+        intercept(
+                sql+" window w1 as (partition by a, b order by c rows between 1 preceding and 1 following), w2 as w1,  w3 as w2",
+        "Window reference 'w2' is not a window specification"
+        );
     }
+
+
+
 
 
 }
