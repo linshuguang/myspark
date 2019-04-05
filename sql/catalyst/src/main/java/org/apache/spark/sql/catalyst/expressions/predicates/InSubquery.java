@@ -2,6 +2,7 @@ package org.apache.spark.sql.catalyst.expressions.predicates;
 
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.subquery.ListQuery;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,5 +26,14 @@ public class InSubquery extends Predicate {
         list.addAll(values);
         list.add(query);
         return list;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof In){
+            InSubquery in = (InSubquery)o;
+            return ParserUtils.equals(query,in.query) && ParserUtils.equalList(values, in.values);
+        }
+        return false;
     }
 }

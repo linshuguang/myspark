@@ -34,6 +34,9 @@ public class UnresolvedAttribute extends Attribute{
         return new UnresolvedAttribute(Arrays.asList(name.split("\\.")));
     }
 
+    public boolean resolved(){
+        return false;
+    }
     public String name(){
         if(nameParts==null || nameParts.size()==0){
             return null;

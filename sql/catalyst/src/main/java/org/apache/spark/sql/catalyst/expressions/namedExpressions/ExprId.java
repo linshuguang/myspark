@@ -3,12 +3,13 @@ package org.apache.spark.sql.catalyst.expressions.namedExpressions;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.subquery.SubqueryExpression;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * Created by kenya on 2019/2/22.
  */
-public class ExprId {
+public class ExprId implements Serializable{
     long id;
     UUID jvmId;
     public ExprId (long id){

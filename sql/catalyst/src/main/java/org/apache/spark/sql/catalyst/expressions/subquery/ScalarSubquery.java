@@ -28,4 +28,11 @@ public class ScalarSubquery extends SubqueryExpression {
         return new ScalarSubquery(getPlan(),getChildren(),getExprId());
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof ScalarSubquery){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

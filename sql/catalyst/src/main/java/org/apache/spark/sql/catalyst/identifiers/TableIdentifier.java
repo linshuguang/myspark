@@ -14,6 +14,10 @@ public class TableIdentifier extends IdentifierWithDatabase {
     }
 
 
+    @Override
+    public String toString(){
+        return super.toString();
+    }
 
 
 }

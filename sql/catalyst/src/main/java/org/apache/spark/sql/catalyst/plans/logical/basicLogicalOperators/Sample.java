@@ -11,15 +11,15 @@ import org.apache.spark.sql.catalyst.util.RandomSampler;
  */
 @Data
 public class Sample extends UnaryNode {
-    Double lowerBound;
-    Double upperBound;
+    double lowerBound;
+    double upperBound;
     boolean withReplacement;
-    Long seed;
+    long seed;
 
     public Sample( Double lowerBound,
-            Double upperBound,
+            double upperBound,
             boolean withReplacement,
-            Long seed,
+                   long seed,
             LogicalPlan child){
         super(child);
         this.lowerBound = lowerBound;
@@ -43,7 +43,20 @@ public class Sample extends UnaryNode {
     @Override
     public Sample clone(){
         //TODO:deep copy check on child
+        //throw new RuntimeException("todo here");
         return new Sample(lowerBound,upperBound,withReplacement,seed,getChild());
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Sample){
+            Sample s = (Sample)o;
+            return  Double.compare(lowerBound,s.lowerBound)==0
+                    && Double.compare(upperBound,s.upperBound)==0
+                    && withReplacement==s.withReplacement
+                    && seed == s.seed;
+
+        }
+        return false;
+    }
 }

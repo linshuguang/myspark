@@ -1,6 +1,7 @@
 package org.apache.spark.sql.catalyst.plans.logical;
 
 import org.apache.spark.sql.catalyst.identifiers.AliasIdentifier;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 /**
  * Created by kenya on 2019/1/19.
@@ -21,6 +22,15 @@ public class SubqueryAlias extends OrderPreservingUnaryNode{
         return name.getIdentifier();
     }
 
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof SubqueryAlias){
+            SubqueryAlias s = (SubqueryAlias)o;
+            return ParserUtils.equals(name,s.name);
+        }
+        return false;
+    }
 
 
 }

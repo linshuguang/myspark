@@ -2,6 +2,7 @@ package org.apache.spark.sql.catalyst.expressions.complexTypeCreator;
 
 import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,5 +48,14 @@ public class CreateNamedStruct extends  CreateNamedStructLike {
         return children;
     }
 
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof CreateNamedStruct){
+            CreateNamedStruct c = (CreateNamedStruct)o;
+            return ParserUtils.equalList(nameExprs(),c.nameExprs()) && ParserUtils.equalList(valExprs(),c.valExprs());
+        }
+        return false;
+    }
 
 }

@@ -9,4 +9,8 @@ import org.apache.spark.sql.catalyst.expressions.Unevaluable;
 public class NamePlaceholder extends LeafExpression implements Unevaluable {
 
 
+    @Override
+    public boolean equals(Object o){
+        return o instanceof NamePlaceholder;
+    }
 }

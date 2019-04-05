@@ -5,6 +5,7 @@ import org.apache.spark.sql.catalyst.expressions.Attribute;
 import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.ExprId;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpression;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 
 import java.util.ArrayList;
@@ -32,4 +33,12 @@ public class ListQuery extends SubqueryExpression {
         return new ListQuery(getPlan(),getChildren(),getExprId(), childOutputs);
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof  ListQuery){
+            ListQuery l  = (ListQuery)o;
+            return ParserUtils.equalList(childOutputs,l.childOutputs);
+        }
+        return false;
+    }
 }

@@ -10,5 +10,11 @@ public class LessThan extends BinaryComparison {
         super(left, right);
     }
 
-
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof LessThan){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

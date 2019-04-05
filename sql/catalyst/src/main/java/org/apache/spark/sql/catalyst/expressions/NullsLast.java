@@ -7,4 +7,8 @@ public class NullsLast extends NullOrdering {
     public NullsLast(){
         super("NULLS LAST");
     }
+    @Override
+    public boolean equals(Object o){
+        return o instanceof NullsLast;
+    }
 }

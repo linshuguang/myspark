@@ -3,19 +3,17 @@ package org.apache.spark.sql.catalyst.parser;
 import javafx.util.Pair;
 import org.apache.spark.sql.catalyst.analysis.AnalysisTest;
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute;
-import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedAlias;
-import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedFunction;
-import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedRelation;
-import org.apache.spark.sql.catalyst.analysis.unresolved.UnresolvedStar;
+import org.apache.spark.sql.catalyst.analysis.unresolved.*;
 import org.apache.spark.sql.catalyst.expressions.*;
 import org.apache.spark.sql.catalyst.expressions.arithmetic.Divide;
 import org.apache.spark.sql.catalyst.expressions.arithmetic.UnaryMinus;
+import org.apache.spark.sql.catalyst.expressions.complexTypeCreator.CreateStruct;
 import org.apache.spark.sql.catalyst.expressions.grouping.Cube;
 import org.apache.spark.sql.catalyst.expressions.grouping.Rollup;
 import org.apache.spark.sql.catalyst.expressions.literals.Literal;
 import org.apache.spark.sql.catalyst.expressions.namedExpressions.NamedExpression;
-import org.apache.spark.sql.catalyst.expressions.predicates.EqualTo;
-import org.apache.spark.sql.catalyst.expressions.predicates.LessThan;
+import org.apache.spark.sql.catalyst.expressions.predicates.*;
+import org.apache.spark.sql.catalyst.expressions.subquery.ScalarSubquery;
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.RowFrame;
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.SpecifiedWindowFrame;
 import org.apache.spark.sql.catalyst.expressions.windowExpressions.UnspecifiedFrame;
@@ -26,6 +24,7 @@ import org.apache.spark.sql.catalyst.plans.joinTypes.*;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias;
 import org.apache.spark.sql.catalyst.plans.logical.basicLogicalOperators.*;
+import org.apache.spark.sql.catalyst.plans.logical.hints.UnresolvedHint;
 import org.apache.spark.sql.types.IntegerType;
 import org.junit.Test;
 import org.junit.internal.runners.JUnit4ClassRunner;
@@ -94,6 +93,14 @@ public class PlanParserSuite extends AnalysisTest {
         return new Union(logicalPlan,otherPlan);
     }
 
+    private LogicalPlan intersect(LogicalPlan logicalPlan,LogicalPlan otherPlan,boolean isAll){
+        return new Intersect(logicalPlan, otherPlan, isAll);
+    }
+    private LogicalPlan except(LogicalPlan logicalPlan,LogicalPlan otherPlan,boolean isAll){
+        return new Except(logicalPlan, otherPlan, isAll);
+    }
+
+
     private LogicalPlan where(LogicalPlan logicalPlan,Expression condition) {
         return new Filter(condition, logicalPlan);
     }
@@ -150,6 +157,13 @@ public class PlanParserSuite extends AnalysisTest {
             LogicalPlan otherPlan
             ){
         return join(logicalPlan,otherPlan, new Inner(),null);
+    }
+    private LogicalPlan join(
+            LogicalPlan logicalPlan,
+            LogicalPlan otherPlan,
+            JoinType joinType
+    ){
+        return join(logicalPlan,otherPlan, joinType,null);
     }
 
     private LogicalPlan join(
@@ -620,56 +634,495 @@ public class PlanParserSuite extends AnalysisTest {
         test("left anti join",new  LeftAnti(), testExistence);
         test("anti join", new LeftAnti(), testExistence);
 
-//        // Test natural cross join
-//        intercept("select * from a natural cross join b")
-//
-//        // Test natural join with a condition
-//        intercept("select * from a natural join b on a.id = b.id")
-//
-//        // Test multiple consecutive joins
-//        assertEqual(
-//                "select * from a join b join c right join d",
-//                table("a").join(table("b")).join(table("c")).join(table("d"), RightOuter).select(star()))
-//
-//        // SPARK-17296
-//        assertEqual(
-//                "select * from t1 cross join t2 join t3 on t3.id = t1.id join t4 on t4.id = t1.id",
-//                table("t1")
-//                        .join(table("t2"), Cross)
-//                        .join(table("t3"), Inner, Option(Symbol("t3.id") === Symbol("t1.id")))
-//                        .join(table("t4"), Inner, Option(Symbol("t4.id") === Symbol("t1.id")))
-//                        .select(star()))
-//
-//        // Test multiple on clauses.
-//        intercept("select * from t1 inner join t2 inner join t3 on col3 = col2 on col3 = col1")
-//
-//        // Parenthesis
-//        assertEqual(
-//                "select * from t1 inner join (t2 inner join t3 on col3 = col2) on col3 = col1",
-//                table("t1")
-//                        .join(table("t2")
-//                                .join(table("t3"), Inner, Option('col3 === 'col2)), Inner, Option('col3 === 'col1))
-//                        .select(star()))
-//        assertEqual(
-//                "select * from t1 inner join (t2 inner join t3) on col3 = col2",
-//                table("t1")
-//                        .join(table("t2").join(table("t3"), Inner, None), Inner, Option('col3 === 'col2))
-//                        .select(star()))
-//        assertEqual(
-//                "select * from t1 inner join (t2 inner join t3 on col3 = col2)",
-//                table("t1")
-//                        .join(table("t2").join(table("t3"), Inner, Option('col3 === 'col2)), Inner, None)
-//                        .select(star()))
-//
-//        // Implicit joins.
-//        assertEqual(
-//                "select * from t1, t3 join t2 on t1.col1 = t2.col2",
-//                table("t1")
-//                        .join(table("t3"))
-//                        .join(table("t2"), Inner, Option(Symbol("t1.col1") === Symbol("t2.col2")))
-//                        .select(star()))
+        // Test natural cross join
+        intercept("select * from a natural cross join b");
+
+        // Test natural join with a condition
+        intercept("select * from a natural join b on a.id = b.id");
+
+        // Test multiple consecutive joins
+        assertEqual(
+                "select * from a join b join c right join d",
+                select(join(join(join(table("a"),table("b")),table("c")),table("d"), new RightOuter()),star()));
+
+        // SPARK-17296
+        assertEqual(
+                "select * from t1 cross join t2 join t3 on t3.id = t1.id join t4 on t4.id = t1.id",
+                select(join(join(join(table("t1"),table("t2"), new Cross()),
+                        table("t3"), new Inner(), new EqualTo(new UnresolvedAttribute("t3.id"), new UnresolvedAttribute("t1.id"))),
+                        table("t4"), new Inner(), new EqualTo(new UnresolvedAttribute("t4.id"), new UnresolvedAttribute("t1.id")))
+                        ,star()));
+
+        // Test multiple on clauses.
+        intercept("select * from t1 inner join t2 inner join t3 on col3 = col2 on col3 = col1");
+
+        // Parenthesis
+        assertEqual(
+                "select * from t1 inner join (t2 inner join t3 on col3 = col2) on col3 = col1",
+                select(join(join(table("t1"),table("t2")),
+                                table("t3"), new Inner(), new EqualTo(new UnresolvedAttribute("col3"), new UnresolvedAttribute("col2")))
+                        ,star()));
+        assertEqual(
+                "select * from t1 inner join (t2 inner join t3) on col3 = col2",
+                select(
+                        join(table("t1"),
+                        join(table("t2"),table("t3"), new Inner(), null), new Inner(),new EqualTo(new UnresolvedAttribute("col3"), new UnresolvedAttribute("col2")))
+                        ,star()
+                        ));
+        assertEqual(
+                "select * from t1 inner join (t2 inner join t3 on col3 = col2)",
+                select(
+                        join(table("t1"),
+                                join(table("t2"),table("t3"), new Inner(), new EqualTo(new UnresolvedAttribute("col3"), new UnresolvedAttribute("col2"))),
+                                new Inner(), null),
+                        star()));
+
+        // Implicit joins.
+        assertEqual(
+                "select * from t1, t3 join t2 on t1.col1 = t2.col2",
+                select( join(
+                        join(table("t1"),table("t3"))
+                        ,table("t2"), new Inner(), new EqualTo(new UnresolvedAttribute("t1.col1"), new UnresolvedAttribute("t2.col2"))),star()));
     }
 
 
+    @Test
+    public void testSampledRelations() {
+        String sql = "select * from t";
+        assertEqual(sql+" tablesample(100 rows)",
+                select(limit(table("t"),Literal.build(new Integer(100))),star()));
+        assertEqual(sql+" tablesample(43 percent) as x",
+                select(new Sample(0.0, 0.43, false, 10L, as(table("t"),"x")),star()));
+        assertEqual(sql+" tablesample(bucket 4 out of 10) as x",
+                select(new Sample(0.0, 0.4,false, 10L,as(table("t"),"x")),star()));
+        intercept(sql+" tablesample(bucket 4 out of 10 on x) as x",
+                "TABLESAMPLE(BUCKET x OUT OF y ON colname) is not supported");
+//        intercept(sql+" tablesample(bucket 11 out of 10) as x",
+//                "Sampling fraction (${11.0/10.0}) must be on interval [0, 1]");
+        intercept("SELECT * FROM parquet_t0 TABLESAMPLE(300M) s",
+                "TABLESAMPLE(byteLengthLiteral) is not supported");
+        intercept("SELECT * FROM parquet_t0 TABLESAMPLE(BUCKET 3 OUT OF 32 ON rand()) s",
+                "TABLESAMPLE(BUCKET x OUT OF y ON function) is not supported");
+    }
+
+
+    @Test
+    public void testSubQuery() {
+        LogicalPlan plan = select(table("t0"),new UnresolvedAttribute("id"));
+                assertEqual("select id from (t0)", plan);
+                assertEqual("select id from ((((((t0))))))", plan);
+                assertEqual(
+                        "(select * from t1) union distinct (select * from t2)",
+                        new Distinct(union(select(table("t1"),star()),select(table("t2"),star()))));
+                assertEqual(
+                        "select * from ((select * from t1) union (select * from t2)) t",
+                        select(as(new Distinct(
+                                union(select(table("t1"),star()),select(table("t2"),star()))),"t"),star()));
+                assertEqual(
+                        "select  id from (((select id from t0)        union all      (select  id from t0))       union all     (select id from t0)) as u_1",
+                        select(as(union(union(plan,plan),plan),"u_1"), new UnresolvedAttribute("id")));
+    }
+
+    @Test
+    public void testScalarSubQuery() {
+        assertEqual(
+                "select (select max(b) from s) ss from t",
+                select(table("t"),new Alias(new ScalarSubquery(select(table("s"),function("max",new UnresolvedAttribute("b")))),"ss")));
+
+        assertEqual(
+                "select * from t where a = (select b from s)",
+                select(
+                        where(
+                                table("t"),
+                                new EqualTo(new UnresolvedAttribute("a"),new ScalarSubquery(select(table("s"), new UnresolvedAttribute("b"))))),star()));
+
+
+        assertEqual(
+                "select g from t group by g having a > (select b from s)",
+                where(groupBy(table("t"),
+                        Arrays.asList(new UnresolvedAttribute("g")),
+                        Arrays.asList(new UnresolvedAttribute("g"))),
+                        new GreaterThan(new UnresolvedAttribute("a"),new ScalarSubquery(select(table("s"),new UnresolvedAttribute("b"))))));
+
+    }
+
+    @Test
+    public void testTableReference() {
+        assertEqual("table t", table("t"));
+        assertEqual("table d.t", table("d", "t"));
+    }
+
+    @Test
+    public void testTableValuedFunction() {
+        assertEqual(
+                "select * from range(2)",
+                select(new UnresolvedTableValuedFunction("range", Arrays.asList(Literal.build(new Integer(2))), new ArrayList<>()),star()));
+    }
+
+
+    @Test
+    public void testRangeAsAlias(){ //("SPARK-20311 range(N) as alias")
+        assertEqual(
+                "SELECT * FROM range(10) AS t",
+                select(new SubqueryAlias("t", new UnresolvedTableValuedFunction("range", Arrays.asList(Literal.build(new Integer(10))),new ArrayList<>())),star()));
+
+        assertEqual(
+                "SELECT * FROM range(7) AS t(a)",
+                select(new SubqueryAlias("t", new UnresolvedTableValuedFunction("range", Arrays.asList(Literal.build(new Integer(7))),Arrays.asList("a"))),star()));
+    }
+
+
+    @Test
+    public void testAliasInFrom(){//("SPARK-20841 Support table column aliases in FROM clause") {
+        assertEqual(
+                "SELECT * FROM testData AS t(col1, col2)",
+                select(new UnresolvedSubqueryColumnAliases(
+                        Arrays.asList("col1", "col2"),
+                        new SubqueryAlias("t", new UnresolvedRelation(new TableIdentifier("testData")))
+                ),star()));
+    }
+
+    @Test
+    public void testSubQueryInFrom(){// ("SPARK-20962 Support subquery column aliases in FROM clause") {
+        assertEqual(
+                "SELECT * FROM (SELECT a AS x, b AS y FROM t) t(col1, col2)",
+                select(new UnresolvedSubqueryColumnAliases(
+                        Arrays.asList("col1", "col2"),
+                        new SubqueryAlias(
+                                "t",
+                                select(
+                                        new UnresolvedRelation(new TableIdentifier("t")),
+                                        new Alias(new UnresolvedAttribute("a"),"x"),
+                                                new Alias(new UnresolvedAttribute("b"),"y")))
+                ),star()));
+    }
+
+    @Test
+    public void testAliasForJoinRelation(){//("SPARK-20963 Support aliases for join relations in FROM clause") {
+        LogicalPlan src1 = as(new UnresolvedRelation(new TableIdentifier("src1")),"s1");
+        LogicalPlan src2 = as(new UnresolvedRelation(new TableIdentifier("src2")),"s2");
+        assertEqual(
+                "SELECT * FROM (src1 s1 INNER JOIN src2 s2 ON s1.id = s2.id) dst(a, b, c, d)",
+                select(new UnresolvedSubqueryColumnAliases(
+                        Arrays.asList("a", "b", "c", "d"),
+                        new SubqueryAlias(
+                                "dst",
+                                join(src1,src2, new Inner(), new EqualTo(new UnresolvedAttribute("s1.id"), new UnresolvedAttribute("s2.id"))))
+                ),star()));
+    }
+
+
+
+    @Test
+    public void testInlineTable() {
+        assertEqual("values 1, 2, 3, 4",
+                new UnresolvedInlineTable(
+                        Arrays.asList("col1"),
+                        Arrays.asList(
+                                Arrays.asList(Literal.build(new Integer(1))),
+                                Arrays.asList(Literal.build(new Integer(2))),
+                                Arrays.asList(Literal.build(new Integer(3))),
+                                Arrays.asList(Literal.build(new Integer(4)))
+                        )));
+
+        assertEqual(
+                "values (1, 'a'), (2, 'b') as tbl(a, b)",
+                new SubqueryAlias("tbl",
+                        new UnresolvedInlineTable(
+                                Arrays.asList("a", "b"),
+                                Arrays.asList(
+                                        Arrays.asList(Literal.build(new Integer(1)), Literal.build(new String("a"))),
+                                        Arrays.asList(Literal.build(new Integer(2)), Literal.build(new String("b")))
+                                ))));
+    }
+
+
+    @Test
+    public void testUnEqual() {//("simple select query with !> and !<") {
+        // !< is equivalent to >=
+        assertEqual("select a, b from db.c where x !< 1",
+                select(
+                        where(table("db", "c"), new GreaterThanOrEqual(new UnresolvedAttribute("x"), Literal.build(new Integer(1)))),
+                        new UnresolvedAttribute("a"), new UnresolvedAttribute("b")));
+        // !> is equivalent to <=
+        assertEqual("select a, b from db.c where x !> 1",
+                select(where(table("db", "c"), new LessThanOrEqual(new UnresolvedAttribute("x"), Literal.build(new Integer(1)))),
+                        new UnresolvedAttribute("a"), new UnresolvedAttribute("b")));
+    }
+
+
+    @Test
+    public void testHint() {
+        intercept("SELECT /*+ HINT() */ * FROM t","mismatched input");
+
+        intercept("SELECT /*+ INDEX(a b c) */ * from default.t","mismatched input 'b' expecting");
+
+        intercept("SELECT /*+ INDEX(a b c) */ * from default.t","mismatched input 'b' expecting");
+
+        assertEqual(
+                "SELECT /*+ BROADCASTJOIN(u) */ * FROM t",
+                new UnresolvedHint("BROADCASTJOIN", Arrays.asList(new UnresolvedAttribute("u")), select(table("t"),star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ MAPJOIN(u) */ * FROM t",
+                new UnresolvedHint("MAPJOIN", Arrays.asList(new UnresolvedAttribute("u")), select(table("t"),star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ STREAMTABLE(a,b,c) */ * FROM t",
+                new UnresolvedHint("STREAMTABLE", Arrays.asList(
+                        new UnresolvedAttribute("a"),
+                        new UnresolvedAttribute("b"),
+                        new UnresolvedAttribute("c")
+                        ), select(table("t"),star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ INDEX(t, emp_job_ix) */ * FROM t",
+                new UnresolvedHint("INDEX", Arrays.asList(
+                        new UnresolvedAttribute("t"),
+                        new UnresolvedAttribute("emp_job_ix")
+                ), select(table("t"),star()))
+        );
+
+        assertEqual(
+                "SELECT /*+ MAPJOIN(`default.t`) */ * from `default.t`",
+                new UnresolvedHint("MAPJOIN", Arrays.asList(
+                        UnresolvedAttribute.quoted("default.t")
+                ), select(table("default.t"),star()))
+        );
+
+        assertEqual(
+                "SELECT /*+ MAPJOIN(t) */ a from t where true group by a order by a",
+                orderBy(
+                        new UnresolvedHint("MAPJOIN", Arrays.asList(
+                            new UnresolvedAttribute("t")
+                        ),
+                        groupBy(
+                                where(table("t"), Literal.build(new Boolean(true))),
+                                Arrays.asList(new UnresolvedAttribute("a")),
+                                Arrays.asList(new UnresolvedAttribute("a")))),
+                        new SortOrder(new UnresolvedAttribute("a"), new Ascending())));
+
+        assertEqual(
+                "SELECT /*+ COALESCE(10) */ * FROM t",
+                new UnresolvedHint("COALESCE", Arrays.asList(
+                        Literal.build(new Integer(10))
+                ), select(table("t"),star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ REPARTITION(100) */ * FROM t",
+                new UnresolvedHint("REPARTITION", Arrays.asList(
+                        Literal.build(new Integer(100))
+                ), select(table("t"),star()))
+        );
+
+
+
+        assertEqual(
+                "INSERT INTO s SELECT /*+ REPARTITION(100), COALESCE(500), COALESCE(10) */ * FROM t",
+                new InsertIntoTable( table("s"), new HashMap<String,String>(),
+                        new UnresolvedHint("REPARTITION", Arrays.asList(
+                        Literal.build(new Integer(100))),
+                                new UnresolvedHint("COALESCE", Arrays.asList(
+                                        Literal.build(new Integer(500))),
+                                        new UnresolvedHint("COALESCE", Arrays.asList(
+                                                Literal.build(new Integer(10))),
+                                                select(table("t"),star())
+                                                )
+                                )),false,false));
+
+
+
+        assertEqual(
+                "SELECT /*+ BROADCASTJOIN(u), REPARTITION(100) */ * FROM t",
+                        new UnresolvedHint("BROADCASTJOIN", Arrays.asList(
+                                new UnresolvedAttribute("u")),
+                                new UnresolvedHint("REPARTITION", Arrays.asList(
+                                        Literal.build(new Integer(100))),
+                                                select(table("t"),star())
+
+                                )));
+
+        intercept("SELECT /*+ COALESCE(30 + 50) */ * FROM t", "mismatched input");
+    }
+
+
+    @Test
+    public void testHintWithExpr() {//("SPARK-20854: select hint syntax with expressions")
+        assertEqual(
+                "SELECT /*+ HINT1(a, array(1, 2, 3)) */ * from t",
+                new UnresolvedHint("HINT1", Arrays.asList(
+                        new UnresolvedAttribute("a"),
+                        new UnresolvedFunction("array", Arrays.asList(
+                                Literal.build(new Integer(1)),
+                                Literal.build(new Integer(2)),
+                                Literal.build(new Integer(3))
+                        ), false)
+                ), select(table("t"), star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ HINT1(a, 5, 'a', b) */ * from t",
+                new UnresolvedHint("HINT1", Arrays.asList(
+                        new UnresolvedAttribute("a"),
+                        Literal.build(new Integer(5)),
+                        Literal.build(new String("a")),
+                        new UnresolvedAttribute("b")
+                ), select(table("t"), star()))
+        );
+
+
+        assertEqual(
+                "SELECT /*+ HINT1('a', (b, c), (1, 2)) */ * from t",
+                new UnresolvedHint("HINT1", Arrays.asList(
+                        Literal.build(new String("a")),
+                        CreateStruct.build(Arrays.asList(new UnresolvedAttribute("b"), new UnresolvedAttribute("c"))),
+                        CreateStruct.build(Arrays.asList(Literal.build(new Integer(1)), Literal.build(new Integer(2))))
+                ), select(table("t"), star()))
+        );
+    }
+
+    @Test
+    public void testMultipleHints() {//("SPARK-20854: multiple hints")
+        assertEqual(
+                "SELECT /*+ HINT1(a, 1) hint2(b, 2) */ * from t",
+                new UnresolvedHint("HINT1",
+                        Arrays.asList(
+                                new UnresolvedAttribute("a"),
+                                Literal.build(new Integer(1))
+                        ),
+                        new UnresolvedHint("hint2",
+                                Arrays.asList(
+                                        new UnresolvedAttribute("b"),
+                                        Literal.build(new Integer(2))
+                                ),
+                                select(table("t"),star())
+                        )
+                )
+                );
+
+
+        assertEqual(
+                "SELECT /*+ HINT1(a, 1) */ /*+ hint2(b, 2) */ * from t",
+                new UnresolvedHint("HINT1",
+                        Arrays.asList(
+                                new UnresolvedAttribute("a"),
+                                Literal.build(new Integer(1))
+                        ),
+                        new UnresolvedHint("hint2",
+                                Arrays.asList(
+                                        new UnresolvedAttribute("b"),
+                                        Literal.build(new Integer(2))
+                                ),
+                                select(table("t"),star())
+                        )
+                )
+        );
+
+
+
+        assertEqual(
+                "SELECT /*+ HINT1(a, 1), hint2(b, 2) */ /*+ hint3(c, 3) */ * from t",
+                new UnresolvedHint("HINT1",
+                        Arrays.asList(
+                                new UnresolvedAttribute("a"),
+                                Literal.build(new Integer(1))
+                        ),
+                        new UnresolvedHint("hint2",
+                                Arrays.asList(
+                                        new UnresolvedAttribute("b"),
+                                        Literal.build(new Integer(2))
+                                ),
+                                new UnresolvedHint("hint3",
+                                        Arrays.asList(
+                                                new UnresolvedAttribute("c"),
+                                                Literal.build(new Integer(3))
+                                        ),
+                                select(table("t"),star())
+                                )
+                        )
+                )
+        );
+    }
+
+
+    @Test
+    public void TestTrim(){
+        intercept("select ltrim(both 'S' from 'SS abc S'", "missing ')' at '<EOF>'");
+        intercept("select rtrim(trailing 'S' from 'SS abc S'", "missing ')' at '<EOF>'");
+
+        assertEqual(
+                "SELECT TRIM(BOTH '@$%&( )abc' FROM '@ $ % & ()abc ' )",
+                select(new OneRowRelation(), new UnresolvedFunction("TRIM",
+                        Arrays.asList(
+                                Literal.build(new String("@$%&( )abc")),
+                                Literal.build(new String("@ $ % & ()abc "))
+                        ),false
+                )));
+
+                assertEqual(
+                        "SELECT TRIM(LEADING 'c []' FROM '[ ccccbcc ')",
+                        select(new OneRowRelation(), new UnresolvedFunction("ltrim",
+                                Arrays.asList(
+                                        Literal.build(new String("c []")),
+                                        Literal.build(new String("[ ccccbcc "))
+                                ),false
+                        )));
+
+                        assertEqual(
+                                "SELECT TRIM(TRAILING 'c&^,.' FROM 'bc...,,,&&&ccc')",
+                                select(new OneRowRelation(), new UnresolvedFunction("rtrim",
+                                        Arrays.asList(
+                                                Literal.build(new String("c&^,.")),
+                                                Literal.build(new String("bc...,,,&&&ccc"))
+                                        ) ,false
+                                )));
+    }
+
+
+    @Test
+    public void testPrecedenceOfSetOperations(){
+        LogicalPlan a = select(table("a"),star());
+        LogicalPlan b = select(table("b"),star());
+        LogicalPlan c = select(table("c"),star());
+        LogicalPlan d = select(table("d"),star());
+
+
+        String query1 =" SELECT * FROM a UNION SELECT * FROM b EXCEPT SELECT * FROM c INTERSECT SELECT * FROM d";
+        String query2 ="SELECT * FROM a UNION SELECT * FROM b EXCEPT ALL SELECT * FROM c INTERSECT ALL SELECT * FROM d";
+        assertEqual(query1,
+                except(
+                        new Distinct(union(a,b)),
+                        intersect(c,d,false),false));
+
+        assertEqual(query2,
+                except(new Distinct(union(a,b)),
+                        intersect(c,d, true), true));
+
+        //skip
+//        // Now disable precedence enforcement to verify the old behaviour.
+//        withSQLConf(SQLConf.LEGACY_SETOPS_PRECEDENCE_ENABLED.key -> "true") {
+//            assertEqual(query1,
+//                    Distinct(a.union(b)).except(c, isAll = false).intersect(d, isAll = false))
+//            assertEqual(query2, Distinct(a.union(b)).except(c, isAll = true).intersect(d, isAll = true))
+//        }
+//
+//        // Explicitly enable the precedence enforcement
+//        withSQLConf(SQLConf.LEGACY_SETOPS_PRECEDENCE_ENABLED.key -> "false") {
+//            assertEqual(query1,
+//                    Distinct(a.union(b)).except(c.intersect(d, isAll = false), isAll = false))
+//            assertEqual(query2, Distinct(a.union(b)).except(c.intersect(d, isAll = true), isAll = true))
+//        }
+
+
+    }
 
 }

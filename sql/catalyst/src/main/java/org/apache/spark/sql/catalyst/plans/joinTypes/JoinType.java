@@ -2,6 +2,7 @@ package org.apache.spark.sql.catalyst.plans.joinTypes;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -9,7 +10,7 @@ import java.util.Locale;
 /**
  * Created by kenya on 2019/1/21.
  */
-public class JoinType {
+public class JoinType implements Serializable{
 
     protected String sql;
 

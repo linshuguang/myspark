@@ -73,7 +73,7 @@ public class Literal extends LeafExpression{
             return v instanceof CalendarInterval;
         }else if(dataType instanceof BinaryType) {
             return v instanceof Byte[];
-        }else if(dataType instanceof StructType ){
+        }else if(dataType instanceof StringType ){
             return v instanceof UTF8String;
         }else if( dataType instanceof StructType){
 

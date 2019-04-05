@@ -15,4 +15,13 @@ public class EqualNullSafe extends BinaryComparison {
     public EqualNullSafe(List<Expression> expressions){
         super(expressions.get(0),expressions.get(1));
     }
+
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof EqualNullSafe){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

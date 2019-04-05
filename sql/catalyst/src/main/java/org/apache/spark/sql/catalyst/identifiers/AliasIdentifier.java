@@ -17,5 +17,12 @@ public class AliasIdentifier extends  IdentifierWithDatabase {
     }
 
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof AliasIdentifier){
+            return super.equals(o);
+        }
+        return false;
+    }
 
 }

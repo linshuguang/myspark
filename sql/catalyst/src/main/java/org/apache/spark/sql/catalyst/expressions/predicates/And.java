@@ -16,4 +16,13 @@ public class And extends BinaryOperator{
     public And(List<Expression> expressionList ){
         super(expressionList.get(0), expressionList.get(1));
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof And){
+            return super.equals(o);
+        }
+        return false;
+    }
+
 }

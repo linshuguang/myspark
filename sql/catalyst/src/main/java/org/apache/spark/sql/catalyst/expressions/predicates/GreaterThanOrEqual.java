@@ -9,4 +9,12 @@ public class GreaterThanOrEqual extends BinaryComparison {
     public GreaterThanOrEqual(Expression left, Expression right){
         super(left, right);
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof GreaterThanOrEqual){
+            return super.equals(o);
+        }
+        return false;
+    }
 }

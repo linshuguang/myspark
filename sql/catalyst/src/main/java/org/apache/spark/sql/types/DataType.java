@@ -1,11 +1,12 @@
 package org.apache.spark.sql.types;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /**
  * Created by kenya on 2019/1/19.
  */
-public abstract class DataType extends AbstractDataType {
+public abstract class DataType extends AbstractDataType implements Serializable {
 
     /**
      * Enables matching against DataType for expressions:

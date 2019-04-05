@@ -1226,8 +1226,9 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                     aliases = visitIdentifierList(ictx.tableAlias().identifierList());
                 } else {
                     aliases = new ArrayList<>();
-                    for (int i = 0; i < rows.size(); i++) {
-                        aliases.add("col$" + (i + 1));
+                    //trick here
+                    for (int i = 0; i < rows.get(0).size(); i++) {
+                        aliases.add("col" + (i + 1));
                     }
                 }
                 UnresolvedInlineTable table = new UnresolvedInlineTable(aliases, rows);
@@ -1744,9 +1745,10 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             SqlBaseParser.FunctionCallContext ctx){
         Token opt = ctx.trimOption;
         if (opt != null) {
-            if (ctx.qualifiedName().getText().toLowerCase(Locale.ROOT) != "trim") {
-                throw new ParseException("The specified function ${ctx.qualifiedName.getText} " +
-                        "doesn't support with option ${opt.getText}.", ctx);
+            String text = ctx.qualifiedName().getText();
+            if (!StringUtils.equals(text.toLowerCase(Locale.ROOT),"trim")) {
+                throw new ParseException("The specified function "  + text +
+                        "doesn't support with option "+opt.getText(), ctx);
             }
             switch (opt.getType()){
             case SqlBaseParser.BOTH:
