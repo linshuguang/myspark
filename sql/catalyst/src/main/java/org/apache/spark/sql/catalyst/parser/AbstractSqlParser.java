@@ -9,6 +9,7 @@ import org.apache.spark.sql.AnalysisException;
 import static org.apache.spark.sql.catalyst.trees.TreeNode.Origin;
 
 import org.apache.spark.sql.catalyst.expressions.Expression;
+import org.apache.spark.sql.catalyst.identifiers.TableIdentifier;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.types.DataType;
@@ -96,6 +97,13 @@ public abstract class AbstractSqlParser implements ParserInterface{
             }
             Origin position = new Origin(null, null);
             throw new ParseException(sqlText, "Unsupported SQL statement", position, position);
+        });
+    }
+
+    @Override
+    public TableIdentifier parseTableIdentifier(String sqlText){
+        return parse(sqlText,(parser)->{
+            return astBuilder.visitSingleTableIdentifier(parser.singleTableIdentifier());
         });
     }
 }

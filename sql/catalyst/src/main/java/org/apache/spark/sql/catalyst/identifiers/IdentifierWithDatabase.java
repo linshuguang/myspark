@@ -27,7 +27,7 @@ public abstract class IdentifierWithDatabase implements Serializable{
         return name.replace("`", "``");
     }
 
-    private String quotedString(){
+    public String quotedString(){
         String replacedId = quoteIdentifier(identifier);
         String replacedDb = quoteIdentifier(database);
 

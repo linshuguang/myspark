@@ -19,5 +19,12 @@ public class TableIdentifier extends IdentifierWithDatabase {
         return super.toString();
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof TableIdentifier){
+            return super.equals(o);
+        }
+        return false;
+    }
 
 }

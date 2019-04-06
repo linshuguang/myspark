@@ -3,6 +3,7 @@ package org.apache.spark.sql.catalyst.parser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.apache.spark.sql.catalyst.identifiers.TableIdentifier;
 import org.apache.spark.sql.catalyst.trees.TreeNode;
 
 import java.util.function.Function;
