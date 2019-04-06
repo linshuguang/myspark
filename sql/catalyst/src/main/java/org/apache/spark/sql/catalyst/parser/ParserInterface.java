@@ -4,6 +4,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression;
 import org.apache.spark.sql.catalyst.identifiers.TableIdentifier;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.StructType;
 
 /**
  * Created by kenya on 2019/1/18.
@@ -16,4 +17,5 @@ public interface ParserInterface {
     Expression parseExpression(String sqlText);
     LogicalPlan parsePlan(String sqlText);
     TableIdentifier parseTableIdentifier(String sqlText);
+    StructType parseTableSchema(String sqlText);
 }

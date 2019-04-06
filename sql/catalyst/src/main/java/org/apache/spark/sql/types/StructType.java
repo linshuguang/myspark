@@ -2,9 +2,12 @@ package org.apache.spark.sql.types;
 
 import lombok.Data;
 import org.apache.spark.sql.catalyst.expressions.AttributeReference;
+import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;
+import org.apache.spark.sql.catalyst.parser.ParserUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,6 +43,31 @@ public class StructType extends DataType {
         return new StructType(fields);
     }
 
+    public StructType add(String name, String dataType){
+        CatalystSqlParser catalystSqlParser = new CatalystSqlParser();
+        return add(name, catalystSqlParser.parseDataType(dataType), true, Metadata.empty());
+    }
+
+    public StructType add(
+            String name,
+            DataType dataType,
+            boolean nullable,
+            Metadata metadata){
+        List<StructField> f = new ArrayList<>();
+        f.addAll(fields);
+        f.add(new StructField(name, dataType, nullable, metadata));
+        return new StructType(f);
+    }
+
+    public StructType add(
+            String name,
+            String dataType,
+            boolean nullable,
+            String comment){
+        CatalystSqlParser catalystSqlParser = new CatalystSqlParser();
+        return add(name, catalystSqlParser.parseDataType(dataType), nullable, comment);
+    }
+
     public StructType add(
             String name,
             DataType dataType,
@@ -60,14 +88,17 @@ public class StructType extends DataType {
             return true;
         }
 
-        if(s.fields.size()!=this.fields.size()){
+        if(!ParserUtils.equalList(s.fields,fields)){
             return false;
         }
 
-        for(int i=0;i<fields.size(); i++){
-            ok = equals(fields.get(i), s.fields.get(i));
-            if(!ok){
-                return false;
+        if(fields!=null) {
+
+            for (int i = 0; i < fields.size(); i++) {
+                ok = equals(fields.get(i), s.fields.get(i));
+                if (!ok) {
+                    return false;
+                }
             }
         }
         return true;

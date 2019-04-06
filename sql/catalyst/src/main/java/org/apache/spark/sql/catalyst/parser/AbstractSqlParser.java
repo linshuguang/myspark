@@ -13,6 +13,7 @@ import org.apache.spark.sql.catalyst.identifiers.TableIdentifier;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +105,13 @@ public abstract class AbstractSqlParser implements ParserInterface{
     public TableIdentifier parseTableIdentifier(String sqlText){
         return parse(sqlText,(parser)->{
             return astBuilder.visitSingleTableIdentifier(parser.singleTableIdentifier());
+        });
+    }
+
+    @Override
+    public StructType parseTableSchema(String sqlText){
+        return parse(sqlText,(parser)->{
+            return astBuilder.visitSingleTableSchema(parser.singleTableSchema());
         });
     }
 }

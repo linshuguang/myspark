@@ -157,8 +157,8 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
     public StructType visitSingleTableSchema(SqlBaseParser.SingleTableSchemaContext ctx){
         return withOrigin(ctx, new Function<SqlBaseParser.SingleTableSchemaContext, StructType>() {
             @Override
-            public StructType apply(SqlBaseParser.SingleTableSchemaContext singleTableSchemaContext) {
-                return new StructType(visitColTypeList(ctx.colTypeList()));
+            public StructType apply(SqlBaseParser.SingleTableSchemaContext sctx) {
+                return new StructType(visitColTypeList(sctx.colTypeList()));
             }
         });
     }
@@ -2543,13 +2543,13 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
             @Override
             public List<StructField> apply(SqlBaseParser.ColTypeListContext colTypeListContext) {
                 //ctx.colType().asScala.map(visitColType);
-                List<SqlBaseParser.ColTypeContext>colTypes = ctx.colType();
+                List<SqlBaseParser.ColTypeContext>colTypes = colTypeListContext.colType();
 
+                List<StructField> structFields = new ArrayList<>();
                 for(SqlBaseParser.ColTypeContext colType: colTypes){
-
+                    structFields.add(visitColType(colType));
                 }
-
-                return null;
+                return structFields;
             }
         });
     }
