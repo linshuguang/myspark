@@ -19,7 +19,7 @@ public  class PartialFunction<A,B> {
         return f.apply(x);
     }
 
-    public B applyOrElse(Object x,Function<Object,B>def){
+    public <C>B applyOrElse(C x,Function<C,B>def){
         if(!isDefinedAt(x)){
             return def.apply(x);
         }else{

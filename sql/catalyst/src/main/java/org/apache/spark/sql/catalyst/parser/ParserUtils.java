@@ -322,18 +322,26 @@ public  class ParserUtils {
         return tList;
     }
 
-    @FunctionalInterface
-    public interface FoldLeftFunctionalInterface <T, C>{
+//    @FunctionalInterface
+//    public interface FoldLeftFunctionalInterface <T, C>{
+//
+//        public T apply(T left, C right);
+//    }
+//
+//    public static <T, C> T foldLeft(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
+//        T initial = t;
+//        for( C col : collection){
+//            t = f.apply(t, col);
+//        }
+//        return t;
+//    }
 
-        public T apply(T left, C right);
-    }
-
-    public static <T, C> T foldLeft(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
+    public static <T, C> T foldLeft(Collection<C> collection, T t, BiFunction<T,C,T> f ){
         T initial = t;
         for( C col : collection){
-            t = f.apply(t, col);
+            initial = f.apply(initial, col);
         }
-        return t;
+        return initial;
     }
 
     public static List<Integer> range(int from, int to){
@@ -344,7 +352,7 @@ public  class ParserUtils {
         return ret;
     }
 
-    public static <T, C> T foldRight(Collection<C> collection, T t, FoldLeftFunctionalInterface<T, C> f ){
+    public static <T, C> T foldRight(Collection<C> collection, T t, BiFunction<T, C,T> f ){
         T initial = t;
 
         C[] array = (C[])collection.toArray();

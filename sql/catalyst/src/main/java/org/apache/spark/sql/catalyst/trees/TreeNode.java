@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.spark.lang.MurmurHash3;
 import org.apache.spark.lang.PartialFunction;
 import org.apache.spark.sql.catalyst.parser.ParserUtils;
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.util.Utils;
 import org.codehaus.jackson.map.Serializers;
@@ -142,20 +143,41 @@ public abstract class TreeNode<BaseType extends TreeNode<BaseType>> implements S
     }
 
 
-    public BaseType transformUp(Function<BaseType, BaseType> rule){
+    public BaseType transformUp(PartialFunction<BaseType, BaseType> rule){
 
-//        val afterRuleOnChildren = mapChildren(_.transformUp(rule))
-//        if (this fastEquals afterRuleOnChildren) {
-//            CurrentOrigin.withOrigin(origin) {
-//                rule.applyOrElse(this, identity[BaseType])
+        BaseType afterRuleOnChildren = mapChildren((q)->{return q.transformUp(rule);});
+        if ( fastEquals(afterRuleOnChildren)) {
+            return CurrentOrigin.withOrigin(origin,(Void)->{
+                return rule.applyOrElse((BaseType)this,(p)->{return (BaseType)p;});
+            });
+        } else {
+            return CurrentOrigin.withOrigin(origin,(Void)->{
+                return rule.applyOrElse((BaseType)afterRuleOnChildren,(p)->{return (BaseType)p;});
+            });
+        }
+    }
+
+
+
+//    public LogicalPlan resolveOperatorsUp(PartialFunction<LogicalPlan, LogicalPlan> rule){
+//
+//        if (!analyzed) {
+//            AnalysisHelper.allowInvokingTransformsInAnalyzer {
+//                val afterRuleOnChildren = mapChildren(_.resolveOperatorsUp(rule))
+//                if (self fastEquals afterRuleOnChildren) {
+//                    CurrentOrigin.withOrigin(origin) {
+//                        rule.applyOrElse(self, identity[LogicalPlan])
+//                    }
+//                } else {
+//                    CurrentOrigin.withOrigin(origin) {
+//                        rule.applyOrElse(afterRuleOnChildren, identity[LogicalPlan])
+//                    }
+//                }
 //            }
 //        } else {
-//            CurrentOrigin.withOrigin(origin) {
-//                rule.applyOrElse(afterRuleOnChildren, identity[BaseType])
-//            }
+//            self
 //        }
-        return (BaseType)this;
-    }
+//    }
 
     public boolean fastEquals(TreeNode other){
         return this.equals(other) || this == other;

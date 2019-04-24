@@ -1,6 +1,7 @@
 package org.apache.spark.sql.internal;
 
 import javafx.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.SparkContext;
 import org.apache.spark.TaskContext;
 import org.apache.spark.sql.catalyst.parser.ParserInterface;
@@ -13,11 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -82,6 +81,33 @@ public class SQLConf implements Serializable {
                     "prior to Spark 2.0.")
             .booleanConf()
             .createWithDefault(false);
+
+    public static  ConfigEntry<String> OPTIMIZER_PLAN_CHANGE_LOG_LEVEL = buildConf("spark.sql.optimizer.planChangeLog.level")
+            .internal()
+            .doc("Configures the log level for logging the change from the original plan to the new " +
+                    "plan after a rule is applied. The value can be 'trace', 'debug', 'info', 'warn', or " +
+                    "'error'. The default log level is 'trace'.")
+            .stringConf()
+            .transform((s)->{return s.toUpperCase(Locale.ROOT);})
+            .checkValue((logLevel)->{
+                    String level = logLevel.toString();
+                        return   StringUtils.equals(level,"TRACE") ||
+                        StringUtils.equals(level,"DEBUG") ||
+                        StringUtils.equals(level,"INFO") ||
+                        StringUtils.equals(level,"WARN") ||
+                        StringUtils.equals(level,"ERROR");},
+      "Invalid value for 'spark.sql.optimizer.planChangeLog.level'. Valid values are " +
+              "'trace', 'debug', 'info', 'warn' and 'error'.")
+              .createWithDefault("trace");
+
+
+    public static  ConfigEntry<String> OPTIMIZER_PLAN_CHANGE_LOG_RULES = buildConf("spark.sql.optimizer.planChangeLog.rules")
+            .internal()
+            .doc("If this configuration is set, the optimizer will only log plan changes caused by " +
+                    "applying the rules specified in this configuration. The value can be a list of rule " +
+                    "names separated by comma.")
+            .stringConf()
+            .createOptional();
 
 
 
@@ -231,5 +257,24 @@ public class SQLConf implements Serializable {
 
     public boolean supportQuotedRegexColumnName(){
         return getConf(SUPPORT_QUOTED_REGEX_COLUMN_NAME);
+    }
+
+    public String optimizerPlanChangeLogLevel(){
+        return getConf(OPTIMIZER_PLAN_CHANGE_LOG_LEVEL);
+    }
+    public String optimizerPlanChangeRules(){
+      return  getConf(OPTIMIZER_PLAN_CHANGE_LOG_RULES);
+    }
+
+    protected BiFunction<String,String,Boolean> caseInsensitiveResolution = (a,b)->{return  a.equalsIgnoreCase(b);};
+    protected BiFunction<String,String,Boolean> caseSensitiveResolution = (a,b)->{return  a==b;};
+
+    public BiFunction<String,String,Boolean> resolver(){
+        if (caseSensitiveAnalysis()) {
+            return caseSensitiveResolution;
+        } else {
+            return caseInsensitiveResolution;
+        }
+
     }
 }

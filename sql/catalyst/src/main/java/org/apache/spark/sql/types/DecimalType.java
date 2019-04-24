@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 /**
  * Created by kenya on 2019/1/22.
  */
-public class DecimalType extends DateType {
+public class DecimalType extends AbstractDataType {
 
     public static int MAX_PRECISION = 38;
     public static int MAX_SCALE = 38;

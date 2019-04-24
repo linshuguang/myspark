@@ -12,26 +12,12 @@ import java.util.function.Function;
 @Service
 public abstract class AnalysisHelper extends QueryPlan<LogicalPlan>{
 
-    private static ThreadLocal<Integer> resolveOperatorDepth = new ThreadLocal<Integer>(){
-        @Override
-        public Integer initialValue(){
-            return 0;
-        }
-    };
 
-    public static <T> T allowInvokingTransformsInAnalyzer(Function<Void,T> f){
-        resolveOperatorDepth.set(resolveOperatorDepth.get() + 1);
-        try {
-            return f.apply((Void)null);
-        } finally {
-            resolveOperatorDepth.set(resolveOperatorDepth.get() - 1);
-        }
-    }
 
-    @Override
-    public LogicalPlan transformUp(Function<LogicalPlan, LogicalPlan>rule){
-        //assertNotAnalysisRule()
-        return super.transformUp(rule);
-    }
+//    @Override
+//    public LogicalPlan transformUp(Function<LogicalPlan, LogicalPlan>rule){
+//        //assertNotAnalysisRule()
+//        return super.transformUp(rule);
+//    }
 
 }

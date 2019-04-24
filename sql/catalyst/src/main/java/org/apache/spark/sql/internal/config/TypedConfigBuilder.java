@@ -44,8 +44,16 @@ public class TypedConfigBuilder<T> {
         }
     }
 
+//    public OptionalConfigEntry<T> createOptional(){
+//        OptionalConfigEntry entry = new OptionalConfigEntry<T>(parent.key, parent.get_alternatives(), converter,
+//                stringConverter, parent.get_doc(), parent.is_public());
+//
+//        parent.get_onCreate().apply(entry);
+//        return entry;
+//    }
 
-    public <T>ConfigEntry<T> createWithDefaultString(String def){
+
+    public ConfigEntry<T> createWithDefaultString(String def){
         ConfigBuilder.ConfigEntryWithDefaultString<T> entry = new ConfigBuilder.ConfigEntryWithDefaultString(parent.getKey(), parent.get_alternatives(), def,
         converter, stringConverter, parent.get_doc(), parent.is_public());
         parent.get_onCreate().apply(entry);
@@ -53,10 +61,27 @@ public class TypedConfigBuilder<T> {
     }
 
 
-    public <T>OptionalConfigEntry<T> createOptional(){
+    public OptionalConfigEntry<T> createOptional(){
         OptionalConfigEntry<T> entry = new OptionalConfigEntry(parent.getKey(), parent.get_alternatives(), converter,
                 stringConverter, parent.get_doc(), parent.is_public());
         parent.get_onCreate().apply(entry);
         return entry;
+    }
+
+    public TypedConfigBuilder transform(Function<T,T>fn){
+        return new TypedConfigBuilder(parent,(s)->{
+            T t = converter.apply(s.toString());
+            return fn.apply(t);
+        }, stringConverter);
+    }
+
+    public TypedConfigBuilder checkValue(Function<T,Boolean>validator, String errorMsg){
+        return transform(
+                (v)->{
+                    if (!validator.apply(v)) throw new IllegalArgumentException(errorMsg);
+                    return v;
+                }
+
+        );
     }
 }
