@@ -1,5 +1,6 @@
 package org.apache.spark.sql.catalyst.expressions.literals;
 
+import lombok.Data;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.Expression;
@@ -20,6 +21,7 @@ import java.sql.Timestamp;
 /**
  * Created by kenya on 2019/1/22.
  */
+@Data
 public class Literal extends LeafExpression{
 
     Object value;

@@ -20,23 +20,24 @@ public class ResolveBroadcastHints extends Rule<LogicalPlan>{
 
     @Override
     public LogicalPlan apply(LogicalPlan plan){
-        plan.transformUp()
-        : LogicalPlan = plan resolveOperatorsUp
-        case h: UnresolvedHint if BROADCAST_HINT_NAMES.contains(h.name.toUpperCase(Locale.ROOT)) =>
-            if (h.parameters.isEmpty) {
-                // If there is no table alias specified, turn the entire subtree into a BroadcastHint.
-                ResolvedHint(h.child, HintInfo(broadcast = true))
-            } else {
-                // Otherwise, find within the subtree query plans that should be broadcasted.
-                applyBroadcastHint(h.child, h.parameters.map {
-                    case tableName: String => tableName
-                    case tableId: UnresolvedAttribute => tableId.name
-                    case unsupported => throw new AnalysisException("Broadcast hint parameter should be " +
-                            s"an identifier or string but was $unsupported (${unsupported.getClass}")
-                }.toSet)
-            }
+//        plan.transformUp()
+//        : LogicalPlan = plan resolveOperatorsUp
+//        case h: UnresolvedHint if BROADCAST_HINT_NAMES.contains(h.name.toUpperCase(Locale.ROOT)) =>
+//            if (h.parameters.isEmpty) {
+//                // If there is no table alias specified, turn the entire subtree into a BroadcastHint.
+//                ResolvedHint(h.child, HintInfo(broadcast = true))
+//            } else {
+//                // Otherwise, find within the subtree query plans that should be broadcasted.
+//                applyBroadcastHint(h.child, h.parameters.map {
+//                    case tableName: String => tableName
+//                    case tableId: UnresolvedAttribute => tableId.name
+//                    case unsupported => throw new AnalysisException("Broadcast hint parameter should be " +
+//                            s"an identifier or string but was $unsupported (${unsupported.getClass}")
+//                }.toSet)
+//            }
+        throw new RuntimeException("not implemented yet");
     }
 }
 
 
-}
+

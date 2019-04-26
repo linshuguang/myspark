@@ -1758,7 +1758,7 @@ public class AstBuilder extends SqlBaseBaseVisitor<Object> {
                 case SqlBaseParser.TRAILING:
                     return new FunctionIdentifier("rtrim", funcID.getDatabase());
                 default: throw new ParseException("Function trim doesn't support with " +
-                        "type ${opt.getType}. Please use BOTH, LEADING or Trailing as trim type", ctx);
+                        "type "+opt.getType()+". Please use BOTH, LEADING or Trailing as trim type", ctx);
             }
         } else {
             return funcID;

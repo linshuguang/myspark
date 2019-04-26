@@ -1,7 +1,7 @@
 package org.apache.spark.sql.catalyst.analysis;
 
 import org.apache.spark.lang.PartialFunction;
-import org.apache.spark.sql.catalyst.expressions.Alias;
+import org.apache.spark.sql.catalyst.expressions.namedExpressions.Alias;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.apache.spark.sql.catalyst.rules.Rule;
 
